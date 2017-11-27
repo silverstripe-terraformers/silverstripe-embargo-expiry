@@ -1,0 +1,4 @@
+SiteTree:
+  home:
+    Title: Home
+    URLSegment: home
