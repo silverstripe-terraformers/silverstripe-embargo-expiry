@@ -138,8 +138,8 @@ class EmbargoExpiryExtension extends DataExtension
             return;
         }
 
-        $this->ensurePublishJob();
-        $this->ensureUnPublishJob();
+        $this->owner->ensurePublishJob();
+        $this->owner->ensureUnPublishJob();
     }
 
     public function onBeforeDuplicate($original, $doWrite)
@@ -301,7 +301,7 @@ class EmbargoExpiryExtension extends DataExtension
     /**
      * Ensure the existence of a publish job at the specified time.
      */
-    protected function ensurePublishJob()
+    public function ensurePublishJob()
     {
         // Can't clear a job while it's in the process of being completed.
         if ($this->owner->getIsPublishJobRunning()) {
@@ -314,7 +314,7 @@ class EmbargoExpiryExtension extends DataExtension
 
         // If there is no publish time, we must want to remove the old Publish Job.
         if (!$publishTime) {
-            $this->clearPublishJob();
+            $this->owner->clearPublishJob();
 
             return;
         }
@@ -324,7 +324,7 @@ class EmbargoExpiryExtension extends DataExtension
             && ($unPublishTime < $now || $unPublishTime < $publishTime)
         ) {
             // We don't want to publish something that's meant to be being unpublished..
-            $this->clearPublishJob();
+            $this->owner->clearPublishJob();
 
             return;
         }
@@ -342,7 +342,7 @@ class EmbargoExpiryExtension extends DataExtension
             }
 
             // Remove the old Publish Job.
-            $this->clearPublishJob();
+            $this->owner->clearPublishJob();
         }
 
         $options = [
@@ -360,7 +360,7 @@ class EmbargoExpiryExtension extends DataExtension
     /**
      * Ensure the existence of an unpublish job at the specified time.
      */
-    protected function ensureUnPublishJob()
+    public function ensureUnPublishJob()
     {
         // Can't clear a job while it's in the process of being completed.
         if ($this->owner->getIsPublishJobRunning()) {
@@ -371,7 +371,7 @@ class EmbargoExpiryExtension extends DataExtension
         $unPublishTime = $this->owner->dbObject('UnPublishOnDate')->getTimestamp();
 
         if (!$unPublishTime) {
-            $this->clearUnPublishJob();
+            $this->owner->clearUnPublishJob();
 
             return;
         }
@@ -388,7 +388,7 @@ class EmbargoExpiryExtension extends DataExtension
                 return;
             }
 
-            $this->clearUnPublishJob();
+            $this->owner->clearUnPublishJob();
         }
 
         $options = [
@@ -462,7 +462,7 @@ class EmbargoExpiryExtension extends DataExtension
             return true;
         }
 
-        if (!$this->getIsPublishScheduled()) {
+        if (!$this->owner->getIsPublishScheduled()) {
             return true;
         }
 
