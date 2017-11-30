@@ -1,0 +1,38 @@
+{
+  "name": "terraformers-embargo-expiry",
+  "version": "0.1",
+  "description": "Embargo & expiry module for SilverStrip CMS",
+  "engines": {
+    "node": ">=8"
+  },
+  "scripts": {
+    "build": "NODE_ENV=production webpack -p --bail --progress",
+    "watch": "NODE_ENV=development webpack --watch --progress",
+    "css": "WEBPACK_CHILD=css npm run build",
+    "lint": "eslint client/src && sass-lint -v"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:silverstripe-terraformers/silverstripe-embargo-expiry.git"
+  },
+  "keywords": [
+    "embargo",
+    "expiry",
+    "publish",
+    "unpublish",
+    "silverstripe",
+    "cms"
+  ],
+  "author": "Silverstripe Terraformers",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/issues"
+  },
+  "homepage": "https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry",
+  "devDependencies": {
+    "@silverstripe/webpack-config": "^0.4.1"
+  },
+  "dependencies": {
+    "jquery": "^3.2.1"
+  }
+}
