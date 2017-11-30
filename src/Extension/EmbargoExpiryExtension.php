@@ -13,6 +13,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\Member;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\View\Requirements;
 use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
@@ -67,6 +68,8 @@ class EmbargoExpiryExtension extends DataExtension
      */
     public function updateCMSFields(FieldList $fields)
     {
+        Requirements::javascript("silverstripe-terraformers/embargo-expiry:client/dist/js/embargo-expiry.js");
+
         $fields->removeByName([
             'PublishJobID',
             'UnPublishJobID',
