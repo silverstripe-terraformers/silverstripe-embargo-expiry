@@ -64,6 +64,14 @@ class EmbargoExpiryExtension extends DataExtension
     public static $allow_embargoed_editing = false;
 
     /**
+     * Config variable that you can set to true if you want to always enforce that publish dates are before unpublish
+     * dates.
+     *
+     * @var bool
+     */
+    public static $enforce_sequential_dates = false;
+
+    /**
      * @param FieldList $fields
      */
     public function updateCMSFields(FieldList $fields)
@@ -323,7 +331,8 @@ class EmbargoExpiryExtension extends DataExtension
         }
 
         // There is an unpublish time set, and that time has already passed or it's before the publish time.
-        if ($unPublishTime
+        if ($this->owner->config()->get('enforce_sequential_dates')
+            && $unPublishTime
             && ($unPublishTime < $now || $unPublishTime < $publishTime)
         ) {
             // We don't want to publish something that's meant to be being unpublished..
