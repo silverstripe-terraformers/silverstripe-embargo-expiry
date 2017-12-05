@@ -1,10 +1,10 @@
 /* eslint-env browser */
 
 window.jQuery.entwine('ss', ($) => {
-  const showHidePublishButton = (hasEmbargo) => {
-    const saveButton = $('button[name="action_save"]');
-    const publishButton = $('button[name="action_publish"]');
+  let publishButton = null;
+  let saveButton = null;
 
+  const showHidePublishButton = (hasEmbargo) => {
     if (hasEmbargo) {
       publishButton.detach();
     } else {
@@ -14,6 +14,10 @@ window.jQuery.entwine('ss', ($) => {
 
   $('input[name="PublishOnDate"]').entwine({
     onmatch() {
+      // Any time we match this field, make sure we have the latest instance of our buttons.
+      publishButton = $('button[name="action_publish"]');
+      saveButton = $('button[name="action_save"]');
+
       showHidePublishButton($(this).val().length > 0);
     },
     onchange() {
