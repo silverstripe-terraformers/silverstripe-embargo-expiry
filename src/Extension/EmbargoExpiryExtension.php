@@ -135,8 +135,6 @@ class EmbargoExpiryExtension extends DataExtension
 
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
-
         // Only operate on staging content for this extension; otherwise, you need to publish the page to be able to set
         // a 'future' publish... While the same could be said for the unpublish, the 'publish' state is the one that
         // must be avoided so we allow setting the 'unpublish' date for as-yet-not-published content.

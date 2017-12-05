@@ -3,6 +3,7 @@
 namespace Terraformers\EmbargoExpiry\Job;
 
 use SilverStripe\CMS\Model\SiteTree;
+use SuperClosure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 
 /**
@@ -24,6 +25,21 @@ class PublishTargetJob extends AbstractQueuedJob
             $this->totalSteps = 1;
             $this->options = $options;
         }
+    }
+
+    /**
+     * @param string $name
+     * @return \SilverStripe\ORM\DataObject
+     */
+    public function getObject($name = 'SilverStripe\\Core\\Object')
+    {
+        if (array_key_exists('onBeforeGetObject', $this->options)) {
+            if (($superClosure = $this->options['onBeforeGetObject']) instanceof SerializableClosure) {
+                $superClosure->__invoke();
+            }
+        }
+
+        return parent::getObject($name);
     }
 
     /**
