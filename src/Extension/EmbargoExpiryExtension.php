@@ -256,7 +256,7 @@ class EmbargoExpiryExtension extends DataExtension
     public function unlinkPublishJobAndDate()
     {
         $this->owner->PublishOnDate = null;
-        $this->owner->PublishJobID = null;
+        $this->owner->PublishJobID = 0;
     }
 
     /**
@@ -266,7 +266,7 @@ class EmbargoExpiryExtension extends DataExtension
     public function unlinkUnPublishJobAndDate()
     {
         $this->owner->UnPublishOnDate = null;
-        $this->owner->UnPublishJobID = null;
+        $this->owner->UnPublishJobID = 0;
     }
 
     /**
@@ -340,7 +340,7 @@ class EmbargoExpiryExtension extends DataExtension
         }
 
         // Check if there is a prior Publish Job.
-        if ($this->owner->PublishJobID) {
+        if ((int) $this->owner->PublishJobID !== 0) {
             $job = $this->owner->PublishJob();
 
             // If it's the same Publish Job, leave it be.
@@ -387,7 +387,7 @@ class EmbargoExpiryExtension extends DataExtension
         }
 
         // Check if there is a prior job.
-        if ($this->owner->UnPublishJobID) {
+        if ((int) $this->owner->UnPublishJobID !== 0) {
             $job = $this->owner->UnPublishJob();
 
             // If it's the same UnPublish Job, leave it bet.
@@ -427,7 +427,7 @@ class EmbargoExpiryExtension extends DataExtension
             return true;
         }
 
-        if ($this->owner->PublishJobID !== 0) {
+        if ((int) $this->owner->PublishJobID !== 0) {
             return true;
         }
 
@@ -448,7 +448,7 @@ class EmbargoExpiryExtension extends DataExtension
             return true;
         }
 
-        if ($this->owner->UnPublishJobID !== 0) {
+        if ((int) $this->owner->UnPublishJobID !== 0) {
             return true;
         }
 
