@@ -7,6 +7,7 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\Form;
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 
 class EmbargoExpiryCMSMainExtension extends Extension
 {
@@ -85,10 +86,14 @@ class EmbargoExpiryCMSMainExtension extends Extension
      */
     protected function removeEmbargoOrExpiry($id, $field)
     {
-        // Find the record.
+        /** @var SiteTree|EmbargoExpiryExtension $record */
         $record = SiteTree::get()->byID($id);
         if (!$record || !$record->exists()) {
             throw new HTTPResponse_Exception("Bad record ID #$id", 404);
+        }
+
+        if (!$record->checkRemovePermission()) {
+            throw new AccessDeniedException('You do not have permission to remove embargo and expiry dates.');
         }
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
