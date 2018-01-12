@@ -5,6 +5,7 @@ namespace Terraformers\EmbargoExpiry\Job;
 use SilverStripe\CMS\Model\SiteTree;
 use SuperClosure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
+use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 /**
  * Class WorkflowPublishTargetJob
@@ -82,15 +83,17 @@ class PublishTargetJob extends AbstractQueuedJob
 
         $target->setIsPublishJobRunning(true);
 
-        if ($type === 'publish') {
+        if ($type === EmbargoExpiryExtension::JOB_TYPE_PUBLISH) {
             $target->prePublishTargetJob($this->options);
             $target->unlinkPublishJobAndDate();
             $target->writeWithoutVersion();
+            $target->updateVersionsTableRecord(EmbargoExpiryExtension::JOB_TYPE_PUBLISH);
             $target->publishRecursive();
-        } elseif ($type === 'unpublish') {
+        } elseif ($type === EmbargoExpiryExtension::JOB_TYPE_UNPUBLISH) {
             $target->preUnPublishTargetJob($this->options);
             $target->unlinkUnPublishJobAndDate();
             $target->writeWithoutVersion();
+            $target->updateVersionsTableRecord(EmbargoExpiryExtension::JOB_TYPE_UNPUBLISH);
             $target->doUnpublish();
         }
 
