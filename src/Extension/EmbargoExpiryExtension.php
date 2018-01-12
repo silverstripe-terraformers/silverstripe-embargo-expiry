@@ -11,6 +11,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\Queries\SQLUpdate;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -23,12 +24,14 @@ use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
 /**
  * Class WorkflowEmbargoExpiryExtension
  * @package Terraformers\EmbargoExpiry\Extension
- * @property EmbargoExpiryExtension|DataObject $owner
+ *
+ * @property $this|DataObject $owner
  * @property DBDatetime $PublishOnDate
  * @property DBDatetime $UnPublishOnDate
  * @property bool $AllowEmbargoedEditing
  * @property int $PublishJobID
  * @property int $UnPublishJobID
+ *
  * @method QueuedJobDescriptor PublishJob()
  * @method QueuedJobDescriptor UnPublishJob()
  */
@@ -36,6 +39,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 {
     const PERMISSION_ADD = 'CMS_ACCESS_AddEmbargoExpiry';
     const PERMISSION_REMOVE = 'CMS_ACCESS_RemoveEmbargoExpiry';
+
+    const JOB_TYPE_PUBLISH = 'publish';
+    const JOB_TYPE_UNPUBLISH = 'unpublish';
 
     private static $db = array(
         'PublishOnDate' => 'Datetime',
@@ -160,12 +166,10 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     public function onBeforeDuplicate($original, $doWrite)
     {
-        $clone = $this->owner;
-
-        $clone->PublishOnDate = null;
-        $clone->UnPublishOnDate = null;
-        $clone->clearPublishJob();
-        $clone->clearUnPublishJob();
+        $this->owner->PublishOnDate = null;
+        $this->owner->UnPublishOnDate = null;
+        $this->owner->clearPublishJob();
+        $this->owner->clearUnPublishJob();
     }
 
     /**
@@ -655,6 +659,45 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             __CLASS__ . '.NOTEDITABLE_NOTICE',
             'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
         );
+    }
+
+    /**
+     * This is a stopgap for (what I'm considering, for now at least) a bug in Versioned. I believe that
+     * writeWithoutVersion() should update the matching _Versions record, as well as the Stage record, but currently it
+     * does not.
+     *
+     * @param string $jobType
+     * @throws \InvalidArgumentException
+     */
+    public function updateVersionsTableRecord($jobType)
+    {
+        $table = $this->owner->baseTable() . '_Versions';
+
+        switch ($jobType) {
+            case static::JOB_TYPE_PUBLISH:
+                $dateField = 'PublishOnDate';
+                $jobField = 'PublishJobID';
+                break;
+            case static::JOB_TYPE_UNPUBLISH:
+                $dateField = 'UnPublishOnDate';
+                $jobField = 'UnPublishJobID';
+                break;
+            default:
+                throw new \InvalidArgumentException('Invalid Job type supplied.');
+        }
+
+        $sql = SQLUpdate::create($table,
+            [
+                $dateField => null,
+                $jobField => 0,
+            ],
+            [
+                'RecordID' => $this->owner->ID,
+                'Version' => $this->owner->Version,
+            ]
+        );
+
+        $sql->execute();
     }
 
     /**
