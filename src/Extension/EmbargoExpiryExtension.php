@@ -688,8 +688,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         $sql = SQLUpdate::create($table,
             [
-                $dateField => null,
-                $jobField => 0,
+                $dateField => $this->$dateField,
+                $jobField => $this->$jobField,
             ],
             [
                 'RecordID' => $this->owner->ID,
