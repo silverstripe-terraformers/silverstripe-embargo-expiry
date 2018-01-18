@@ -662,10 +662,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     }
 
     /**
-     * This is a stopgap for (what I'm considering, for now at least) a bug in Versioned. I believe that
-     * writeWithoutVersion() should update the matching _Versions record, as well as the Stage record, but currently it
-     * does not.
-     *
      * @param string $jobType
      * @throws \InvalidArgumentException
      */
@@ -688,8 +684,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         $sql = SQLUpdate::create($table,
             [
-                $dateField => null,
-                $jobField => 0,
+                $dateField => $this->$dateField,
+                $jobField => $this->$jobField,
             ],
             [
                 'RecordID' => $this->owner->ID,
