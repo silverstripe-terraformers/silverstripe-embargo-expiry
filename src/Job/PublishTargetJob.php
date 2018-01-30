@@ -3,6 +3,7 @@
 namespace Terraformers\EmbargoExpiry\Job;
 
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\ORM\DataObject;
 use SuperClosure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
@@ -15,32 +16,44 @@ use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 class PublishTargetJob extends AbstractQueuedJob
 {
     /**
+     * @var DataObject
+     */
+    private $target;
+
+    /**
      * WorkflowPublishTargetJob constructor.
      * @param SiteTree|null $obj
      * @param array $options
      */
     public function __construct($obj = null, $options = [])
     {
+        $this->totalSteps = 1;
+
         if ($obj) {
             $this->setObject($obj);
-            $this->totalSteps = 1;
+        }
+
+        if ($options) {
             $this->options = $options;
         }
     }
 
     /**
-     * @param string $name
-     * @return \SilverStripe\ORM\DataObject
+     * @return DataObject
      */
-    public function getObject($name = 'SilverStripe\\Core\\Object')
+    public function getTarget()
     {
-        if (array_key_exists('onBeforeGetObject', $this->options)) {
-            if (($superClosure = $this->options['onBeforeGetObject']) instanceof SerializableClosure) {
-                $superClosure->__invoke();
+        if ($this->target === null) {
+            if (array_key_exists('onBeforeGetObject', $this->options)) {
+                if (($superClosure = $this->options['onBeforeGetObject']) instanceof SerializableClosure) {
+                    $superClosure->__invoke();
+                }
             }
+
+            $this->target = parent::getObject();
         }
 
-        return parent::getObject($name);
+        return $this->target;
     }
 
     /**
@@ -49,7 +62,7 @@ class PublishTargetJob extends AbstractQueuedJob
     public function getTitle()
     {
         /** @var SiteTree $target */
-        $target = $this->getObject();
+        $target = $this->getTarget();
         $type = array_key_exists('type', $this->options) ? $this->options['type'] : null;
 
         return _t(
@@ -66,7 +79,7 @@ class PublishTargetJob extends AbstractQueuedJob
     public function process()
     {
         /** @var SiteTree $target */
-        $target = $this->getObject();
+        $target = $this->getTarget();
         $type = array_key_exists('type', $this->options) ? $this->options['type'] : null;
 
         if ($target === null) {
