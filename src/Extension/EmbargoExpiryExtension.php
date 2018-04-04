@@ -350,6 +350,14 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return;
         }
 
+        // You might have some additional requirements for allowing a PublishJob to be created.
+        /** @var array|bool[] $canHavePublishJob */
+        $canHavePublishJob = $this->owner->extend('canHavePublishJob');
+        // One or more extensions said that this Object cannot have a PublishJob.
+        if (in_array(false, $canHavePublishJob)) {
+            return;
+        }
+
         $now = DBDatetime::now()->getTimestamp();
         $publishTime = $this->owner->dbObject('PublishOnDate')->getTimestamp();
         $unPublishTime = $this->owner->dbObject('UnPublishOnDate')->getTimestamp();
@@ -411,6 +419,14 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         if (!$this->owner->checkAddPermission()) {
+            return;
+        }
+
+        // You might have some additional requirements for allowing a UnPublishJob to be created.
+        /** @var array|bool[] $canHaveUnPublishJob */
+        $canHaveUnPublishJob = $this->owner->extend('canHaveUnPublishJob');
+        // One or more extensions said that this Object cannot have an UnPublishJob.
+        if (in_array(false, $canHaveUnPublishJob)) {
             return;
         }
 
