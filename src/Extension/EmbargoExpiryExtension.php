@@ -2,6 +2,7 @@
 
 namespace Terraformers\EmbargoExpiry\Extension;
 
+use Exception;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\DatetimeField;
@@ -59,21 +60,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      * @var bool
      */
     public $isPublishJobRunning = false;
-
-    /**
-     * Config variable to decide whether or not pages can be edited while they are embargoed.
-     *
-     * @var bool
-     */
-    public static $allow_embargoed_editing = false;
-
-    /**
-     * Config variable that you can set to true if you want to always enforce that publish dates are before unpublish
-     * dates.
-     *
-     * @var bool
-     */
-    public static $enforce_sequential_dates = false;
 
     /**
      * @param FieldList $fields
@@ -537,6 +523,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function addPublishingScheduleFields(FieldList $fields)
     {
+        $message = $this->getEmbargoExpiryFieldNoticeMessage();
+
         $fields->findOrMakeTab(
             'Root.PublishingSchedule',
             _t(__CLASS__ . '.TAB_TITLE', 'Publishing Schedule')
@@ -561,12 +549,12 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ]
         );
 
-        if (($message = $this->getEmbargoExpiryFieldNoticeMessage()) !== null) {
+        if ($message !== null) {
             $fields->addFieldToTab(
                 'Root.PublishingSchedule',
                 LiteralField::create(
                     'PublishDateIntro',
-                    "<h4 class=\"notice\">{$message}</h4>"
+                    sprintf('<h4 class="notice">%s</h4>', $message)
                 ),
                 'PublishOnDate'
             );
@@ -621,15 +609,26 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function addEmbargoExpiryNoticeFields(FieldList $fields)
     {
         $conditions = [];
+        $warnings = [];
 
         if ($this->getIsPublishScheduled()) {
+            $time = strtotime($this->owner->PublishOnDate);
             $key = _t(__CLASS__ . '.EMBARGO_NAME', 'embargo');
-            $conditions[$key] = $this->owner->PublishOnDate;
+
+            $conditions[$key] = [
+                'date' => $this->owner->PublishOnDate,
+                'warning' => ($time > 0 && $time < time()),
+            ];
         }
 
         if ($this->getIsUnPublishScheduled()) {
+            $time = strtotime($this->owner->UnPublishOnDate);
             $key = _t(__CLASS__ . '.EXPIRY_NAME', 'expiry');
-            $conditions[$key] = $this->owner->UnPublishOnDate;
+
+            $conditions[$key] = [
+                'date' => $this->owner->UnPublishOnDate,
+                'warning' => ($time > 0 && $time < time()),
+            ];
         }
 
         if (count($conditions) === 0) {
@@ -637,19 +636,32 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         $message = $this->getEmbargoExpiryNoticeMessage($conditions);
+        $type = 'notice';
 
-        foreach ($conditions as $name => $date) {
+        foreach ($conditions as $name => $data) {
+            $warning = '';
+
+            if ($data['warning']) {
+                $type = 'error';
+
+                $warning = sprintf(
+                    '<strong>%s</strong>',
+                    _t(__CLASS__ . '.PAST_DATE_WARNING', ' (this date is in the past, is it still valid?)')
+                );
+            }
+
             $message .= sprintf(
-                '<br /><strong>%s</strong>: %s',
+                '<br /><strong>%s</strong>: %s%s',
                 ucfirst($name),
-                $date
+                $data['date'],
+                $warning
             );
         }
 
         $fields->unshift(
             LiteralField::create(
                 'EmbargoExpiryNotice',
-                "<p class=\"message notice\">{$message}</p>"
+                sprintf('<p class="message %s">%s</p>', $type, $message)
             )
         );
     }
@@ -675,41 +687,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             __CLASS__ . '.NOTEDITABLE_NOTICE',
             'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
         );
-    }
-
-    /**
-     * @param string $jobType
-     * @throws \InvalidArgumentException
-     */
-    public function updateVersionsTableRecord($jobType)
-    {
-        $table = $this->owner->baseTable() . '_Versions';
-
-        switch ($jobType) {
-            case static::JOB_TYPE_PUBLISH:
-                $dateField = 'PublishOnDate';
-                $jobField = 'PublishJobID';
-                break;
-            case static::JOB_TYPE_UNPUBLISH:
-                $dateField = 'UnPublishOnDate';
-                $jobField = 'UnPublishJobID';
-                break;
-            default:
-                throw new \InvalidArgumentException('Invalid Job type supplied.');
-        }
-
-        $sql = SQLUpdate::create($table,
-            [
-                $dateField => $this->$dateField,
-                $jobField => $this->$jobField,
-            ],
-            [
-                'RecordID' => $this->owner->ID,
-                'Version' => $this->owner->Version,
-            ]
-        );
-
-        $sql->execute();
     }
 
     /**

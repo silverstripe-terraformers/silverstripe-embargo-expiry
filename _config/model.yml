@@ -1,0 +1,6 @@
+---
+Name: embargoexpirymodel
+---
+SilverStripe\ORM\DataObject:
+  allow_embargoed_editing: true
+  enforce_sequential_dates: false

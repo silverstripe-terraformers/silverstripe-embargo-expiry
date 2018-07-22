@@ -7,10 +7,19 @@ use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\Form;
+use SilverStripe\ORM\DataObject;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 
+/**
+ * Class EmbargoExpiryCMSMainExtension
+ *
+ * @package Terraformers\EmbargoExpiry\Extension
+ */
 class EmbargoExpiryCMSMainExtension extends Extension
 {
+    /**
+     * @var array
+     */
     private static $allowed_actions = array(
         'removeEmbargoAction',
         'removeExpiryAction',
@@ -42,10 +51,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      */
     public function removeEmbargoAction($data, $form)
     {
-        // Find the record.
-        $id = $data['ID'];
-
-        $this->removeEmbargoOrExpiry($id, 'PublishOnDate');
+        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'PublishOnDate', 'PublishJobID');
 
         $this->owner->getResponse()->addHeader(
             'X-Status',
@@ -66,10 +72,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      */
     public function removeExpiryAction($data, $form)
     {
-        // Find the record.
-        $id = $data['ID'];
-
-        $this->removeEmbargoOrExpiry($id, 'UnPublishOnDate');
+        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'UnPublishOnDate', 'UnPublishJobID');
 
         $this->owner->getResponse()->addHeader(
             'X-Status',
@@ -80,14 +83,15 @@ class EmbargoExpiryCMSMainExtension extends Extension
     }
 
     /**
-     * @param $id
-     * @param $field
+     * @param string $className
+     * @param string $id
+     * @param string $field
      * @throws HTTPResponse_Exception
      */
-    protected function removeEmbargoOrExpiry($id, $field)
+    protected function removeEmbargoOrExpiry($className, $id, $dateField, $jobField)
     {
-        /** @var SiteTree|EmbargoExpiryExtension $record */
-        $record = SiteTree::get()->byID($id);
+        /** @var DataObject|EmbargoExpiryExtension $record */
+        $record = DataObject::get($className)->byID($id);
         if (!$record || !$record->exists()) {
             throw new HTTPResponse_Exception("Bad record ID #$id", 404);
         }
@@ -97,7 +101,8 @@ class EmbargoExpiryCMSMainExtension extends Extension
         }
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
-        $record->$field = null;
+        $record->$dateField = null;
+        $record->$jobField = 0;
 
         $record->write();
     }
