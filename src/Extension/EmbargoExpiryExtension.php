@@ -211,7 +211,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      * @param Member $member
      * @return bool|null
      */
-    public function canEdit($member)
+    public function canEdit($member = null)
     {
         return $this->owner->isEditable();
     }
@@ -223,7 +223,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      * @param Member $member
      * @return bool|null
      */
-    public function canPublish($member)
+    public function canPublish($member = null)
     {
         return $this->owner->isEditable();
     }
