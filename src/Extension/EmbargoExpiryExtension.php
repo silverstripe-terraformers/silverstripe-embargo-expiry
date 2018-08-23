@@ -88,13 +88,13 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($this->getIsPublishScheduled()) {
             // Add action to remove embargo.
-            $action = new FormAction('removeEmbargoAction', _t(__CLASS__ . 'REMOVE_EMBARGO', 'Remove embargo'));
+            $action = new FormAction('removeEmbargoAction', _t(__CLASS__ . '.REMOVE_EMBARGO', 'Remove embargo'));
             $actions->insertBefore('ActionMenus', $action);
         }
 
         if ($this->getIsUnPublishScheduled()) {
             // Add action to remove embargo.
-            $action = new FormAction('removeExpiryAction', _t(__CLASS__ . 'REMOVE_EXPIRY', 'Remove expiry'));
+            $action = new FormAction('removeExpiryAction', _t(__CLASS__ . '.REMOVE_EXPIRY', 'Remove expiry'));
             $actions->insertBefore('ActionMenus', $action);
         }
     }
