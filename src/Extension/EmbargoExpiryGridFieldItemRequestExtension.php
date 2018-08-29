@@ -3,17 +3,32 @@
 namespace Terraformers\EmbargoExpiry\Extension;
 
 use SilverStripe\Control\Controller;
+use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ValidationException;
+use SilverStripe\Versioned\VersionedGridFieldItemRequest;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 
+/**
+ * Class EmbargoExpiryGridFieldItemRequestExtension
+ *
+ * @package Terraformers\EmbargoExpiry\Extension
+ * @property VersionedGridFieldItemRequest $owner
+ */
 class EmbargoExpiryGridFieldItemRequestExtension extends Extension
 {
+    /**
+     * @param FieldList $actions
+     * @return FieldList
+     */
     public function updateFormActions(FieldList $actions)
     {
+        /** @var DataObject|EmbargoExpiryExtension $record */
         $record = $this->owner->getRecord();
 
         // Break out if record does not have EmbargoExpiry extension
@@ -46,6 +61,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * @param Form $form
      * @return HTTPResponse
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     public function removeEmbargoAction($data, $form)
     {
@@ -66,6 +82,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * @param Form $form
      * @return HTTPResponse
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     public function removeExpiryAction($data, $form)
     {
@@ -82,9 +99,11 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * @param string $dateField
      * @param string $jobField
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     public function removeEmbargoOrExpiry($dateField, $jobField)
     {
+        /** @var DataObject|EmbargoExpiryExtension $record */
         $record = $this->owner->getRecord();
 
         if (!$record || !$record->exists()) {
@@ -96,8 +115,8 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
         }
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
-        $record->$dateField = null;
-        $record->$jobField = 0;
+        $record->{$dateField} = null;
+        $record->{$jobField} = 0;
 
         $record->write();
     }
