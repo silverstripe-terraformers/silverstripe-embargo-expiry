@@ -2,18 +2,20 @@
 
 namespace Terraformers\EmbargoExpiry\Extension;
 
-use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\CMS\Controllers\CMSMain;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\ValidationException;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 
 /**
  * Class EmbargoExpiryCMSMainExtension
  *
  * @package Terraformers\EmbargoExpiry\Extension
+ * @property CMSMain $owner
  */
 class EmbargoExpiryCMSMainExtension extends Extension
 {
@@ -25,6 +27,9 @@ class EmbargoExpiryCMSMainExtension extends Extension
         'removeExpiryAction',
     );
 
+    /**
+     * @param Form $form
+     */
     public function updateEditForm($form)
     {
         // Add archive to CMS exemption
@@ -48,6 +53,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * @param Form $form
      * @return HTTPResponse
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     public function removeEmbargoAction($data, $form)
     {
@@ -69,6 +75,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * @param Form $form
      * @return HTTPResponse
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     public function removeExpiryAction($data, $form)
     {
@@ -85,8 +92,10 @@ class EmbargoExpiryCMSMainExtension extends Extension
     /**
      * @param string $className
      * @param string $id
-     * @param string $field
+     * @param string $dateField
+     * @param string $jobField
      * @throws HTTPResponse_Exception
+     * @throws ValidationException
      */
     protected function removeEmbargoOrExpiry($className, $id, $dateField, $jobField)
     {
@@ -101,8 +110,8 @@ class EmbargoExpiryCMSMainExtension extends Extension
         }
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
-        $record->$dateField = null;
-        $record->$jobField = 0;
+        $record->{$dateField} = null;
+        $record->{$jobField} = 0;
 
         $record->write();
     }
