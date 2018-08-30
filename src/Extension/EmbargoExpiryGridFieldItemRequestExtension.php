@@ -39,14 +39,14 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
         if ($record->getIsPublishScheduled()) {
             $actions->push(FormAction::create(
                 'removeEmbargoAction',
-                _t(__CLASS__ . 'REMOVE_EMBARGO', 'Remove embargo')
+                _t(__CLASS__ . '.REMOVE_EMBARGO', 'Remove embargo')
             ));
         }
 
         if ($record->getIsUnPublishScheduled()) {
             $actions->push(FormAction::create(
                 'removeExpiryAction',
-                _t(__CLASS__ . 'REMOVE_EXPIRY', 'Remove expiry')
+                _t(__CLASS__ . '.REMOVE_EXPIRY', 'Remove expiry')
             ));
         }
 
