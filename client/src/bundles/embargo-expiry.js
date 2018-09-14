@@ -26,7 +26,7 @@ window.jQuery.entwine('ss', ($) => {
     }
   };
 
-  $('input[name="PublishOnDate"]').entwine({
+  $('input[name="DesiredPublishDate"]').entwine({
     onmatch() {
       // Any time we match this field, make sure we have the latest instance of our buttons.
       siteTreePublishButton = $('button[name="action_publish"]');

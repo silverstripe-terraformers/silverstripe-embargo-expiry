@@ -1,4 +1,10 @@
-SiteTree:
+SilverStripe\CMS\Model\SiteTree:
   home:
     Title: Home
     URLSegment: home
+  embargo1:
+    Title: Embargo1
+    URLSegment: embargo1
+  expiry1:
+    Title: Expiry1
+    URLSegment: expiry1

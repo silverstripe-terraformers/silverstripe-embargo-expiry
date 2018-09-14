@@ -22,10 +22,10 @@ class EmbargoExpiryCMSMainExtension extends Extension
     /**
      * @var array
      */
-    private static $allowed_actions = array(
+    private static $allowed_actions = [
         'removeEmbargoAction',
         'removeExpiryAction',
-    );
+    ];
 
     /**
      * @param Form $form
@@ -36,10 +36,10 @@ class EmbargoExpiryCMSMainExtension extends Extension
         $exempt = $form->getValidationExemptActions();
         $exempt = array_merge(
             $exempt,
-            array(
+            [
                 'removeEmbargoAction',
                 'removeExpiryAction',
-            )
+            ]
         );
 
         $form->setValidationExemptActions($exempt);
@@ -51,13 +51,13 @@ class EmbargoExpiryCMSMainExtension extends Extension
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse
+     * @return mixed
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
     public function removeEmbargoAction($data, $form)
     {
-        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'PublishOnDate', 'PublishJobID');
+        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'PublishOnDate');
 
         $this->owner->getResponse()->addHeader(
             'X-Status',
@@ -73,13 +73,13 @@ class EmbargoExpiryCMSMainExtension extends Extension
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse
+     * @return mixed
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
     public function removeExpiryAction($data, $form)
     {
-        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'UnPublishOnDate', 'UnPublishJobID');
+        $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'UnPublishOnDate');
 
         $this->owner->getResponse()->addHeader(
             'X-Status',
@@ -93,11 +93,10 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * @param string $className
      * @param string $id
      * @param string $dateField
-     * @param string $jobField
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    protected function removeEmbargoOrExpiry($className, $id, $dateField, $jobField)
+    protected function removeEmbargoOrExpiry($className, $id, $dateField)
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
         $record = DataObject::get($className)->byID($id);
@@ -111,7 +110,6 @@ class EmbargoExpiryCMSMainExtension extends Extension
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
         $record->{$dateField} = null;
-        $record->{$jobField} = 0;
 
         $record->write();
     }

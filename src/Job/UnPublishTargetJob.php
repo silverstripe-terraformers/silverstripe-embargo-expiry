@@ -15,7 +15,7 @@ use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
  * @package Terraformers\EmbargoExpiry\Jobs
  * @property array $options
  */
-class PublishTargetJob extends AbstractQueuedJob
+class UnPublishTargetJob extends AbstractQueuedJob
 {
     /**
      * @var DataObject
@@ -70,8 +70,8 @@ class PublishTargetJob extends AbstractQueuedJob
         $target = $this->getTarget();
 
         return _t(
-            __CLASS__ . '.SCHEDULEPUBLISHJOBTITLE',
-            "Scheduled publishing of {object}",
+            __CLASS__ . '.SCHEDULEUNPUBLISHJOBTITLE',
+            "Scheduled un-publishing of {object}",
             "",
             [
                 'object' => $target->Title,
@@ -90,14 +90,14 @@ class PublishTargetJob extends AbstractQueuedJob
             return;
         }
 
-        $target->setIsPublishJobRunning(true);
+        $target->setIsUnPublishJobRunning(true);
 
-        $target->invokeWithExtensions('prePublishTargetJob', $this->options);
-        $target->unlinkPublishJobAndDate();
+        $target->invokeWithExtensions('preUnPublishTargetJob', $this->options);
+        $target->unlinkUnPublishJobAndDate();
         $target->writeWithoutVersion();
-        $target->publishRecursive();
+        $target->doUnpublish();
 
-        $target->setIsPublishJobRunning(false);
+        $target->setIsUnPublishJobRunning(false);
         $this->completeJob();
     }
 
