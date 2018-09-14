@@ -67,7 +67,17 @@ or from the command line via `vendor/bin/sake dev/build`.
 Finally, ensure you've set up [queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs) correctly
 to execute your jobs periodically.
 
-## Known Issues
+## Using Embargo & Expiry with Fluent
+
+[Fluent](https://github.com/tractorcow/silverstripe-fluent)
+
+`EmbargoExpiryFluentExtension` is provided to add support for DataObject that have `FluentVersionedExtension` applied.
+
+The expected behaviour is that you can now set an Embargo & Expiry date in each Locale separately from each other, and when those dates pass, the Jobs will publish/un-publish only the record in that Locale.
+
+**Please be very aware that there is no test coverage for this Extension as Fluent is not an included dependency for this module. You will need to cover your own tests if you decide to use this Extension.**
+
+## Known Limitations
 
  * Does not support recurring embargo or expiry schedules
  * Does not support multiple concurrent schedules for the same object
