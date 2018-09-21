@@ -79,7 +79,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         $page->write();
 
-        $this->assertTrue($page->isEditable());
+        $this->assertNull($page->isEditable());
     }
 
     /**
@@ -94,7 +94,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page->DesiredPublishDate = '2014-02-05 12:00:00';
         $page->write();
 
-        $this->assertTrue($page->isEditable());
+        $this->assertNull($page->isEditable());
     }
 
     /**
