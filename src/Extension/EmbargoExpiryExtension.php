@@ -554,8 +554,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return true;
         }
 
-        // If the owner object allows embargoed editing, then return null so
-        // we can fall back to SiteTree behaviours (SiteTree and inherited permissions)
+        // If the owner object allows embargoed editing, then return null so we can fall back to SiteTree behaviours
+        // (SiteTree and inherited permissions)
         if ($this->owner->config()->get('allow_embargoed_editing')) {
             return null;
         }
@@ -569,7 +569,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return false;
         }
 
-        return true;
+        // Everything looks ok, so let's fall back to SiteTree behaviours (SiteTree and inherited permissions).
+        return null;
     }
 
     /**

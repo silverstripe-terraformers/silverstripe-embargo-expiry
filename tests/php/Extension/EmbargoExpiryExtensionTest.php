@@ -87,14 +87,31 @@ class EmbargoExpiryExtensionTest extends SapphireTest
      */
     public function testIsEditableWithEmbargo()
     {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
+
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
-        $page->config()->set('allow_embargoed_editing', true);
 
         $page->DesiredPublishDate = '2014-02-05 12:00:00';
         $page->write();
 
         $this->assertNull($page->isEditable());
+    }
+
+    /**
+     * @throws \SilverStripe\ORM\ValidationException
+     */
+    public function testIsNotEditableWithEmbargo()
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'home');
+
+        $page->DesiredPublishDate = '2014-02-05 12:00:00';
+        $page->write();
+
+        $this->assertFalse($page->isEditable());
     }
 
     /**
