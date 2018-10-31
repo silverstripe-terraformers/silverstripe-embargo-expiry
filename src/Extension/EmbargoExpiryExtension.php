@@ -705,7 +705,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ];
         }
 
-        if ($this->getIsUnPublishScheduled()) {
+        if (!$this->getIsUnPublishScheduled()) {
             $time = strtotime($this->owner->UnPublishOnDate);
             $key = _t(__CLASS__ . '.EXPIRY_NAME', 'expiry');
 
