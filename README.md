@@ -6,9 +6,9 @@
 
 ## Overview
 
-This module adds the ability to schedule publish and unpublish events
-at a certain date and time. It can be applied to different model classes,
-but is commonly used with `SiteTree` where it comes with built-in UI triggers.
+Based on the work by [Marcus Nyeholt](https://github.com/nyeholt) and [Andrew Short](https://github.com/ajshort) for the [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/) module.
+
+This module adds the ability to schedule publish and unpublish events at a certain date and time. It can be applied to different model classes, but is commonly used with `SiteTree` where it comes with built-in UI triggers.
 
 Features:
 
