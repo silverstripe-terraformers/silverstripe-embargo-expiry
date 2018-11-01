@@ -667,10 +667,22 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             );
         }
 
-        if ($this->checkRemovePermission()) {
+        if (!$this->checkRemovePermission()) {
             return sprintf(
                 _t(
-                    __CLASS__ . '.EMBARGO_REMOVABLE_NOTICE',
+                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
+                    'This record has an %s date set, and cannot currently be edited. An administrator will need
+                    to remove the scheduled embargo date before you are able to edit this record.'
+                ),
+                implode(' and ', array_keys($conditions))
+            );
+        }
+
+        $key = _t(__CLASS__ . '.EMBARGO_NAME', 'embargo');
+        if (array_key_exists($key, $conditions)) {
+            return sprintf(
+                _t(
+                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
                     'This record has an %s date set, and cannot currently be edited. You will need to remove the
                     scheduled embargo date in order to edit this record.'
                 ),
@@ -680,9 +692,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         return sprintf(
             _t(
-                __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
-                'This record has an %s date set, and cannot currently be edited. An administrator will need
-                to remove the scheduled embargo date before you are able to edit this record.'
+                __CLASS__ . '.EMBARGO_SET_NOTICE',
+                'This record has an %s date set.'
             ),
             implode(' and ', array_keys($conditions))
         );
@@ -705,7 +716,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ];
         }
 
-        if (!$this->getIsUnPublishScheduled()) {
+        if ($this->getIsUnPublishScheduled()) {
             $time = strtotime($this->owner->UnPublishOnDate);
             $key = _t(__CLASS__ . '.EXPIRY_NAME', 'expiry');
 
