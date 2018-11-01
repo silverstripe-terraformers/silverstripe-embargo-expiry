@@ -663,7 +663,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                     __CLASS__ . '.EMBARGO_EDITING_NOTICE',
                     'You are currently editing a record that has an %s date set.'
                 ),
-                implode(' and ', array_keys($conditions))
+                implode(' and ', array_column($conditions, 'name'))
             );
         }
 
@@ -674,19 +674,18 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                     'This record has an %s date set, and cannot currently be edited. An administrator will need
                     to remove the scheduled embargo date before you are able to edit this record.'
                 ),
-                implode(' and ', array_keys($conditions))
+                implode(' and ', array_column($conditions, 'name'))
             );
         }
 
-        $key = _t(__CLASS__ . '.EMBARGO_NAME', 'embargo');
-        if (array_key_exists($key, $conditions)) {
+        if (array_key_exists('embargo', $conditions)) {
             return sprintf(
                 _t(
                     __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
                     'This record has an %s date set, and cannot currently be edited. You will need to remove the
                     scheduled embargo date in order to edit this record.'
                 ),
-                implode(' and ', array_keys($conditions))
+                implode(' and ', array_column($conditions, 'name'))
             );
         }
 
@@ -695,7 +694,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                 __CLASS__ . '.EMBARGO_SET_NOTICE',
                 'This record has an %s date set.'
             ),
-            implode(' and ', array_keys($conditions))
+            implode(' and ', array_column($conditions, 'name'))
         );
     }
 
@@ -708,21 +707,21 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($this->getIsPublishScheduled()) {
             $time = strtotime($this->owner->PublishOnDate);
-            $key = _t(__CLASS__ . '.EMBARGO_NAME', 'embargo');
 
-            $conditions[$key] = [
+            $conditions['embargo'] = [
                 'date' => $this->owner->PublishOnDate,
                 'warning' => ($time > 0 && $time < time()),
+                'name' => _t(__CLASS__ . '.EMBARGO_NAME', 'embargo')
             ];
         }
 
         if ($this->getIsUnPublishScheduled()) {
             $time = strtotime($this->owner->UnPublishOnDate);
-            $key = _t(__CLASS__ . '.EXPIRY_NAME', 'expiry');
 
-            $conditions[$key] = [
+            $conditions['expiry'] = [
                 'date' => $this->owner->UnPublishOnDate,
                 'warning' => ($time > 0 && $time < time()),
+                'name' => _t(__CLASS__ . '.EXPIRY_NAME', 'expiry')
             ];
         }
 
