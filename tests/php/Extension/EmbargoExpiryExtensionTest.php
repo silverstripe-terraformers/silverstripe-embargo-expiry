@@ -2,14 +2,25 @@
 
 namespace Terraformers\EmbargoExpiry\Tests\Extension;
 
+use Exception;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\Forms\FieldList;
+use SilverStripe\Forms\FormAction;
+use SilverStripe\Forms\LiteralField;
+use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\ValidationException;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Tests\Mock\TestQueuedJobService;
 
+/**
+ * Class EmbargoExpiryExtensionTest
+ *
+ * @package Terraformers\EmbargoExpiry\Tests\Extension
+ */
 class EmbargoExpiryExtensionTest extends SapphireTest
 {
     /**
@@ -27,9 +38,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     ];
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -39,7 +50,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         Config::modify()->set(QueuedJobService::class, 'use_shutdown_function', false);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         DBDatetime::clear_mock_now();
         parent::tearDown();
@@ -48,15 +59,37 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     /**
      * @return TestQueuedJobService
      */
-    protected function getService()
+    protected function getService(): TestQueuedJobService
     {
         return singleton(TestQueuedJobService::class);
     }
 
+    public function testGetIsPublishScheduled(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page1 */
+        $page1 = $this->objFromFixture(SiteTree::class, 'scheduledPublish1');
+        /** @var SiteTree|EmbargoExpiryExtension $page2 */
+        $page2 = $this->objFromFixture(SiteTree::class, 'scheduledPublish2');
+
+        $this->assertTrue($page1->getIsPublishScheduled());
+        $this->assertTrue($page2->getIsPublishScheduled());
+    }
+
+    public function testGetIsUnPublishScheduled(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page1 */
+        $page1 = $this->objFromFixture(SiteTree::class, 'scheduledUnPublish1');
+        /** @var SiteTree|EmbargoExpiryExtension $page2 */
+        $page2 = $this->objFromFixture(SiteTree::class, 'scheduledUnPublish2');
+
+        $this->assertTrue($page1->getIsUnPublishScheduled());
+        $this->assertTrue($page2->getIsUnPublishScheduled());
+    }
+
     /**
-     * @throws \SilverStripe\ORM\ValidationException
+     * @throws ValidationException
      */
-    public function testJobCreation()
+    public function testJobCreation(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
@@ -70,9 +103,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
+     * @throws ValidationException
      */
-    public function testIsEditableNoEmbargo()
+    public function testIsEditableNoEmbargo(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
@@ -83,9 +116,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
+     * @throws ValidationException
      */
-    public function testIsEditableWithEmbargo()
+    public function testIsEditableWithEmbargo(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
 
@@ -99,9 +132,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
+     * @throws ValidationException
      */
-    public function testIsNotEditableWithEmbargo()
+    public function testIsNotEditableWithEmbargo(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
 
@@ -115,10 +148,10 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
-     * @throws \Exception
+     * @throws ValidationException
+     * @throws Exception
      */
-    public function testPublishJobProcesses()
+    public function testPublishJobProcesses(): void
     {
         $service = $this->getService();
         /** @var SiteTree|EmbargoExpiryExtension $page */
@@ -142,10 +175,10 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     }
 
     /**
-     * @throws \SilverStripe\ORM\ValidationException
-     * @throws \Exception
+     * @throws ValidationException
+     * @throws Exception
      */
-    public function testUnPublishJobProcesses()
+    public function testUnPublishJobProcesses(): void
     {
         $service = $this->getService();
         /** @var SiteTree|EmbargoExpiryExtension $page */
@@ -167,5 +200,227 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         // We should now be un-published.
         $this->assertFalse((bool) $page->isPublished());
+    }
+
+    public function testUpdateCMSFields(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'idfields');
+        $fields = $page->getCMSFields();
+
+        $this->assertNull($fields->dataFieldByName('PublishJobID'));
+        $this->assertNull($fields->dataFieldByName('UnPublishJobID'));
+    }
+
+    public function testMessageConditionsCanEdit(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
+
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $fields = new FieldList();
+
+        $page->addEmbargoExpiryNoticeFields($fields);
+
+        $fieldsArray = $fields->toArray();
+
+        $this->assertCount(1, $fieldsArray);
+
+        /** @var LiteralField $literalField */
+        $literalField = $fieldsArray[0];
+        $content = $literalField->getContent();
+
+        $this->assertNotContains('cannot currently be edited', $content);
+        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
+        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+    }
+
+    public function testMessageConditionsCannotEditGuest(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $fields = new FieldList();
+
+        $page->addEmbargoExpiryNoticeFields($fields);
+
+        $fieldsArray = $fields->toArray();
+
+        $this->assertCount(1, $fieldsArray);
+
+        /** @var LiteralField $literalField */
+        $literalField = $fieldsArray[0];
+        $content = $literalField->getContent();
+
+        $this->assertContains('cannot currently be edited', $content);
+        $this->assertContains('An administrator will need', $content);
+        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
+        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+    }
+
+    public function testMessageConditionsCannotEditAdmin(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $fields = new FieldList();
+
+        $page->addEmbargoExpiryNoticeFields($fields);
+
+        $fieldsArray = $fields->toArray();
+
+        $this->assertCount(1, $fieldsArray);
+
+        /** @var LiteralField $literalField */
+        $literalField = $fieldsArray[0];
+        $content = $literalField->getContent();
+
+        $this->assertContains('cannot currently be edited', $content);
+        $this->assertContains('You will need to remove', $content);
+        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
+        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+    }
+
+    public function testMessageConditionsWarning(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $fields = new FieldList();
+
+        $page->addEmbargoExpiryNoticeFields($fields);
+
+        $fieldsArray = $fields->toArray();
+
+        $this->assertCount(1, $fieldsArray);
+
+        /** @var LiteralField $literalField */
+        $literalField = $fieldsArray[0];
+        $content = $literalField->getContent();
+
+        // Test that the two warning messages were added.
+        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00<strong> (this date is in the', $content);
+        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00<strong> (this date is in the', $content);
+    }
+
+    public function testEmbargoExpiryFieldNoticeMessageNotEditable(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'scheduledPublish1');
+
+        $this->assertNull($page->getEmbargoExpiryFieldNoticeMessage());
+    }
+
+    public function testEmbargoExpiryFieldNoticeMessageWithPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
+
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'scheduledPublish1');
+
+        $message = $page->getEmbargoExpiryFieldNoticeMessage();
+
+        $this->assertNotNull($message);
+        $this->assertContains('Enter a date and/or time', $message);
+    }
+
+    public function testEmbargoExpiryFieldNoticeMessageWithoutPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
+
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'scheduledPublish1');
+
+        $message = $page->getEmbargoExpiryFieldNoticeMessage();
+
+        $this->assertNotNull($message);
+        $this->assertContains('Please contact an administrator', $message);
+    }
+
+    public function testAddPublishingScheduleFieldsWithoutPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $fields = new FieldList([TabSet::create('Root')]);
+
+        $page->addPublishingScheduleFields($fields);
+
+        $publishField = $fields->dataFieldByName('DesiredPublishDate');
+        $unPublishField = $fields->dataFieldByName('DesiredUnPublishDate');
+
+        $this->assertNotNull($publishField);
+        $this->assertTrue($publishField->isReadonly());
+        $this->assertNotNull($unPublishField);
+        $this->assertTrue($unPublishField->isReadonly());
+        $this->assertNotNull($fields->dataFieldByName('PublishOnDate'));
+        $this->assertNotNull($fields->dataFieldByName('UnPublishOnDate'));
+    }
+
+    public function testAddPublishingScheduleFieldsWithPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $fields = new FieldList([TabSet::create('Root')]);
+
+        $page->addPublishingScheduleFields($fields);
+
+        $publishField = $fields->dataFieldByName('DesiredPublishDate');
+        $unPublishField = $fields->dataFieldByName('DesiredUnPublishDate');
+
+        $this->assertNotNull($publishField);
+        $this->assertFalse($publishField->isReadonly());
+        $this->assertNotNull($unPublishField);
+        $this->assertFalse($unPublishField->isReadonly());
+        $this->assertNotNull($fields->dataFieldByName('PublishOnDate'));
+        $this->assertNotNull($fields->dataFieldByName('UnPublishOnDate'));
+    }
+
+    public function testUpdateCMSActionsWithoutPermission(): void
+    {
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $actions = $page->getCMSActions();
+
+        $this->assertNull($actions->fieldByName('action_removeEmbargoAction'));
+        $this->assertNull($actions->fieldByName('action_removeExpiryAction'));
+    }
+
+    public function testUpdateCMSActionsWithPermission(): void
+    {
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $actions = $page->getCMSActions();
+
+        $this->assertNotNull($actions->fieldByName('action_removeEmbargoAction'));
+        $this->assertNotNull($actions->fieldByName('action_removeExpiryAction'));
     }
 }

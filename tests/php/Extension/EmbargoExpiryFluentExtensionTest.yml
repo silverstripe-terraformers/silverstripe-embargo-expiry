@@ -1,0 +1,4 @@
+SilverStripe\CMS\Model\SiteTree:
+  home:
+    Title: Home
+    URLSegment: home
