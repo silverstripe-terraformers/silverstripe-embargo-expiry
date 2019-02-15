@@ -2,11 +2,18 @@
 
 namespace Terraformers\EmbargoExpiry\Tests\Mock;
 
-use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
-use Symbiote\QueuedJobs\Services\QueuedJobService;
 use SilverStripe\Dev\TestOnly;
+use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
+use Symbiote\QueuedJobs\Services\QueuedJob;
+use Symbiote\QueuedJobs\Services\QueuedJobService;
 
-// stub class to be able to call init from an external context
+/**
+ * Stub class to be able to call init from an external context
+ *
+ * Class TestQueuedJobService
+ *
+ * @package Terraformers\EmbargoExpiry\Tests\Mock
+ */
 class TestQueuedJobService extends QueuedJobService implements TestOnly
 {
     /**
@@ -18,10 +25,10 @@ class TestQueuedJobService extends QueuedJobService implements TestOnly
 
     /**
      * @param QueuedJobDescriptor $descriptor
-     * @return bool|\Symbiote\QueuedJobs\Services\QueuedJob
+     * @return bool|QueuedJob
      * @throws \Exception
      */
-    public function testInit($descriptor)
+    public function testInit(QueuedJobDescriptor $descriptor)
     {
         return $this->initialiseJob($descriptor);
     }

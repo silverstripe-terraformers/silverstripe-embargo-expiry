@@ -12,9 +12,12 @@ use SilverStripe\Forms\FormAction;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\VersionedGridFieldItemRequest;
+use SilverStripe\View\ViewableData_Customised;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 
 /**
+ * Experimental: This does not yet have test coverage. I suggest you write your own for now.
+ *
  * Class EmbargoExpiryGridFieldItemRequestExtension
  *
  * @package Terraformers\EmbargoExpiry\Extension
@@ -26,7 +29,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * @param FieldList $actions
      * @return FieldList
      */
-    public function updateFormActions(FieldList $actions)
+    public function updateFormActions(FieldList $actions): FieldList
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
         $record = $this->owner->getRecord();
@@ -54,54 +57,55 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
     }
 
     /**
-     * This action will remove any/all embargo related dates from a record as well as their
-     * related queued jobs for publishing and/or unpublishing.
+     * This action will remove any/all embargo related dates from a record as well as their related queued jobs for
+     * publishing and/or unpublishing.
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse
+     * @return HTTPResponse|ViewableData_Customised
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    public function removeEmbargoAction($data, $form)
+    public function removeEmbargoAction(array $data, Form $form)
     {
-        $this->removeEmbargoOrExpiry('PublishOnDate', 'PublishJobID');
+        $this->removeEmbargoOrExpiry('PublishOnDate');
 
         $message = _t(__CLASS__ . '.RemovedEmbargoAction', 'Successfully removed scheduled expiry date');
         $form->sessionMessage($message, 'notice');
 
         $controller = Controller::curr();
+
         return $this->owner->edit($controller->getRequest());
     }
 
     /**
-     * This action will remove any/all embargo related dates from a record as well as their
-     * related queued jobs for publishing and/or unpublishing.
+     * This action will remove any/all embargo related dates from a record as well as theirelated queued jobs for
+     * publishing and/or unpublishing.
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse
+     * @return HTTPResponse|ViewableData_Customised
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    public function removeExpiryAction($data, $form)
+    public function removeExpiryAction(array $data, Form $form)
     {
-        $this->removeEmbargoOrExpiry('UnPublishOnDate', 'UnPublishJobID');
+        $this->removeEmbargoOrExpiry('UnPublishOnDate');
 
         $message = _t(__CLASS__ . '.RemovedExpiryAction', 'Successfully removed scheduled expiry date');
         $form->sessionMessage($message, 'notice');
 
         $controller = Controller::curr();
+
         return $this->owner->edit($controller->getRequest());
     }
 
     /**
      * @param string $dateField
-     * @param string $jobField
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    public function removeEmbargoOrExpiry($dateField, $jobField)
+    public function removeEmbargoOrExpiry(string $dateField): void
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
         $record = $this->owner->getRecord();
@@ -116,7 +120,6 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
         $record->{$dateField} = null;
-        $record->{$jobField} = 0;
 
         $record->write();
     }

@@ -3,7 +3,6 @@
 namespace Terraformers\EmbargoExpiry\Extension;
 
 use SilverStripe\CMS\Controllers\CMSMain;
-use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\Form;
@@ -28,9 +27,10 @@ class EmbargoExpiryCMSMainExtension extends Extension
     ];
 
     /**
+     * @codeCoverageIgnore
      * @param Form $form
      */
-    public function updateEditForm($form)
+    public function updateEditForm(Form $form): void
     {
         // Add archive to CMS exemption
         $exempt = $form->getValidationExemptActions();
@@ -55,7 +55,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    public function removeEmbargoAction($data, $form)
+    public function removeEmbargoAction(array $data, Form $form)
     {
         $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'PublishOnDate');
 
@@ -77,7 +77,7 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    public function removeExpiryAction($data, $form)
+    public function removeExpiryAction(array $data, Form $form)
     {
         $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'UnPublishOnDate');
 
@@ -91,12 +91,12 @@ class EmbargoExpiryCMSMainExtension extends Extension
 
     /**
      * @param string $className
-     * @param string $id
+     * @param int $id
      * @param string $dateField
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
-    protected function removeEmbargoOrExpiry($className, $id, $dateField)
+    protected function removeEmbargoOrExpiry(string $className, int $id, string $dateField): void
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
         $record = DataObject::get($className)->byID($id);

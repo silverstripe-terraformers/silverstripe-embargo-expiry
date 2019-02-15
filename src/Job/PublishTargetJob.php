@@ -32,11 +32,11 @@ class PublishTargetJob extends AbstractQueuedJob
     {
         $this->totalSteps = 1;
 
-        if ($obj) {
+        if ($obj !== null) {
             $this->setObject($obj);
         }
 
-        if ($options) {
+        if ($options !== null) {
             $this->options = $options;
         }
     }
@@ -44,7 +44,7 @@ class PublishTargetJob extends AbstractQueuedJob
     /**
      * @return DataObject
      */
-    public function getTarget()
+    public function getTarget(): ?DataObject
     {
         if ($this->target === null) {
             if ($this->options && array_key_exists('onBeforeGetObject', $this->options)) {
@@ -64,7 +64,7 @@ class PublishTargetJob extends AbstractQueuedJob
     /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         /** @var SiteTree $target */
         $target = $this->getTarget();
@@ -79,7 +79,7 @@ class PublishTargetJob extends AbstractQueuedJob
         );
     }
 
-    public function process()
+    public function process(): void
     {
         /** @var DataObject|Versioned|EmbargoExpiryExtension $target */
         $target = $this->getTarget();
@@ -101,7 +101,7 @@ class PublishTargetJob extends AbstractQueuedJob
         $this->completeJob();
     }
 
-    protected function completeJob()
+    protected function completeJob(): void
     {
         $this->currentStep = 1;
         $this->isComplete = true;
