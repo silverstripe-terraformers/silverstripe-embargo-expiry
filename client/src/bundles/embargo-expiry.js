@@ -6,23 +6,33 @@ window.jQuery.entwine('ss', ($) => {
   let versionedObjectPublishButton = null;
   let versionedObjectSaveButton = null;
 
-  const showHidePublishButton = (hasEmbargo) => {
+  const showHidePublishButtons = (hasEmbargo) => {
     if (hasEmbargo) {
-      if (siteTreePublishButton !== null) {
-        siteTreePublishButton.detach();
-      }
+      hidePublishButton();
 
-      if (versionedObjectPublishButton !== null) {
-        versionedObjectPublishButton.detach();
-      }
-    } else {
-      if (siteTreePublishButton !== null) {
-        siteTreePublishButton.insertAfter(siteTreeSaveButton);
-      }
+      return;
+    }
 
-      if (versionedObjectPublishButton !== null) {
-        versionedObjectPublishButton.insertAfter(versionedObjectSaveButton);
-      }
+    showPublishButton();
+  };
+
+  const hidePublishButton = () => {
+    if (siteTreePublishButton !== null) {
+      siteTreePublishButton.detach();
+    }
+
+    if (versionedObjectPublishButton !== null) {
+      versionedObjectPublishButton.detach();
+    }
+  };
+
+  const showPublishButton = () => {
+    if (siteTreePublishButton !== null) {
+      siteTreePublishButton.insertAfter(siteTreeSaveButton);
+    }
+
+    if (versionedObjectPublishButton !== null) {
+      versionedObjectPublishButton.insertAfter(versionedObjectSaveButton);
     }
   };
 
@@ -34,10 +44,10 @@ window.jQuery.entwine('ss', ($) => {
       versionedObjectPublishButton = $('button[name="action_doPublish"]');
       versionedObjectSaveButton = $('button[name="action_doSave"]');
 
-      showHidePublishButton($(this).val().length > 0);
+      showHidePublishButtons($(this).val().length > 0);
     },
     onchange() {
-      showHidePublishButton($(this).val().length > 0);
+      showHidePublishButtons($(this).val().length > 0);
     },
   });
 });
