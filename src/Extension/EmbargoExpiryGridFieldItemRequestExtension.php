@@ -6,6 +6,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
+use SilverStripe\Dev\Debug;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\DataObject;
@@ -73,6 +74,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      */
     public function removeEmbargoAction(array $data, Form $form)
     {
+        Debug::dump('removeEmbargoAction');
         $this->removeEmbargoOrExpiry('PublishOnDate');
 
         $message = _t(__CLASS__ . '.RemovedEmbargoAction', 'Successfully removed scheduled expiry date');
@@ -95,6 +97,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      */
     public function removeExpiryAction(array $data, Form $form)
     {
+        Debug::dump('removeExpiryAction');
         $this->removeEmbargoOrExpiry('UnPublishOnDate');
 
         $message = _t(__CLASS__ . '.RemovedExpiryAction', 'Successfully removed scheduled expiry date');
@@ -112,19 +115,23 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      */
     public function removeEmbargoOrExpiry(string $dateField): void
     {
+        Debug::dump('removeEmbargoOrExpiry');
         /** @var DataObject|EmbargoExpiryExtension $record */
         $record = $this->owner->getRecord();
 
         if (!$record || !$record->exists()) {
+            Debug::dump('no record');
             throw new HTTPResponse_Exception("Bad record", 404);
         }
 
         if (!$record->checkRemovePermission()) {
+            Debug::dump('no permission');
             throw new AccessDeniedException('You do not have permission to remove embargo and expiry dates.');
         }
 
         // Writing the record with no embargo set will automatically remove the queued jobs.
         $record->{$dateField} = null;
+        Debug::dump($dateField . ' field set to null');
 
         $record->write();
     }
