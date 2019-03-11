@@ -6,6 +6,13 @@ window.jQuery.entwine('ss', ($) => {
   let versionedObjectPublishButton = null;
   let versionedObjectSaveButton = null;
 
+  const updateButtonReferences = () => {
+    siteTreePublishButton = $('button[name="action_publish"]');
+    siteTreeSaveButton = $('button[name="action_save"]');
+    versionedObjectPublishButton = $('button[name="action_doPublish"]');
+    versionedObjectSaveButton = $('button[name="action_doSave"]');
+  };
+
   const showHidePublishButtons = (hasEmbargo) => {
     if (hasEmbargo) {
       hidePublishButton();
@@ -37,17 +44,20 @@ window.jQuery.entwine('ss', ($) => {
   };
 
   $('input[name="DesiredPublishDate"]').entwine({
-    onmatch() {
+    onchange() {
       // Any time we match this field, make sure we have the latest instance of our buttons.
-      siteTreePublishButton = $('button[name="action_publish"]');
-      siteTreeSaveButton = $('button[name="action_save"]');
-      versionedObjectPublishButton = $('button[name="action_doPublish"]');
-      versionedObjectSaveButton = $('button[name="action_doSave"]');
+      updateButtonReferences();
 
       showHidePublishButtons($(this).val().length > 0);
     },
-    onchange() {
-      showHidePublishButtons($(this).val().length > 0);
+  });
+
+  $('#Form_EditForm_PublishOnDate').entwine({
+    onmatch() {
+      // Any time we match this field, make sure we have the latest instance of our buttons.
+      updateButtonReferences();
+
+      showHidePublishButtons($(this).html().length > 0);
     },
   });
 });
