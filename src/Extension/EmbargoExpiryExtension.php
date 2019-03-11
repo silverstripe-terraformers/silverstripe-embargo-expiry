@@ -39,8 +39,8 @@ use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
  */
 class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 {
-    const PERMISSION_ADD = 'CMS_ACCESS_AddEmbargoExpiry';
-    const PERMISSION_REMOVE = 'CMS_ACCESS_RemoveEmbargoExpiry';
+    const PERMISSION_ADD = 'AddEmbargoExpiry';
+    const PERMISSION_REMOVE = 'RemoveEmbargoExpiry';
 
     const JOB_TYPE_PUBLISH = 'publish';
     const JOB_TYPE_UNPUBLISH = 'unpublish';
