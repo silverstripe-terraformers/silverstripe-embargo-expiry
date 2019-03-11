@@ -1,0 +1,19 @@
+Terraformers\EmbargoExpiry\Tests\Mock\EmbargoExpirySiteTree:
+  home:
+    Title: Home Page
+    URLSegment: home
+  contact:
+    Title: Home Page
+    URLSegment: home
+
+Terraformers\EmbargoExpiry\Tests\Mock\EmbargoExpiryDataObject:
+  object1:
+    Title: Object1
+    Page: =>Terraformers\EmbargoExpiry\Tests\Mock\EmbargoExpirySiteTree.home
+    PublishOnDate: 2014-01-07 12:00:00
+    UnPublishOnDate: 2014-01-08 12:00:00
+  object2:
+    Title: Object2
+    Page: =>Terraformers\EmbargoExpiry\Tests\Mock\EmbargoExpirySiteTree.contact
+    PublishOnDate: 2014-01-07 12:00:00
+    UnPublishOnDate: 2014-01-08 12:00:00
