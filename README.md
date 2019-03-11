@@ -36,15 +36,7 @@ composer require silverstripe-terraformers/embargo-expiry
 
 ## Configuration
 
-Add the following YAML configuration (e.g. in `mysite/_config/embargo.yml`):
-
-```yml
-SilverStripe\CMS\Controllers\CMSMain:
-  extensions:
-    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryCMSMainExtension
-```
-
-Then add the extension to the `DataObject` classes you want to have embargoed.
+Add the extension to the `DataObject` classes you want to have embargoed.
 
 ```yml
 SilverStripe\CMS\Model\SiteTree:

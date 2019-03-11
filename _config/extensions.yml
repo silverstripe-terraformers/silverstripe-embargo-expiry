@@ -1,6 +1,10 @@
 ---
-Name: embargoexpiry
+Name: embargoexpiryextensions
 ---
+SilverStripe\CMS\Controllers\CMSMain:
+  extensions:
+    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryCMSMainExtension
+
 SilverStripe\Versioned\VersionedGridFieldItemRequest:
   extensions:
     - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryGridFieldItemRequestExtension
