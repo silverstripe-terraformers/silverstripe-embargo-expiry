@@ -12,6 +12,7 @@ use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -330,12 +331,24 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         $now = DBDatetime::now()->getTimestamp();
+
         // New desired date (if set).
-        $desiredPublishTime = $this->owner->dbObject('DesiredPublishDate')->getTimestamp();
-        $desiredUnPublishTime = $this->owner->dbObject('DesiredUnPublishDate')->getTimestamp();
+        /** @var DBDatetime $desiredPublishTimeField */
+        $desiredPublishTimeField = $this->owner->dbObject('DesiredPublishDate');
+        $desiredPublishTime = $desiredPublishTimeField->getTimestamp();
+
+        /** @var DBDatetime $desiredUnPublishTimeField */
+        $desiredUnPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
+        $desiredUnPublishTime = $desiredUnPublishTimeField->getTimestamp();
+
         // Existing publish and un-publish date (if set).
-        $publishTime = $this->owner->dbObject('PublishOnDate')->getTimestamp();
-        $unPublishTime = $this->owner->dbObject('UnPublishOnDate')->getTimestamp();
+        /** @var DBDatetime $publishTimeField */
+        $publishTimeField = $this->owner->dbObject('PublishOnDate');
+        $publishTime = $publishTimeField->getTimestamp();
+
+        /** @var DBDatetime $unPublishTimeField */
+        $unPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
+        $unPublishTime = $unPublishTimeField->getTimestamp();
 
         // If there is no PublishOnDate set, make sure we remove any existing Jobs.
         if (!$publishTime) {
@@ -430,10 +443,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         $now = DBDatetime::now()->getTimestamp();
+
         // New desired date (if set).
-        $desiredUnPublishTime = $this->owner->dbObject('DesiredUnPublishDate')->getTimestamp();
+        /** @var DBDatetime $desiredUnPublishTimeField */
+        $desiredUnPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
+        $desiredUnPublishTime = $desiredUnPublishTimeField->getTimestamp();
+
         // Existing publish and un-publish date (if set).
-        $unPublishTime = $this->owner->dbObject('UnPublishOnDate')->getTimestamp();
+        /** @var DBDatetime $unPublishTimeField */
+        $unPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
+        $unPublishTime = $unPublishTimeField->getTimestamp();
 
         // If there is no UnPublishOnDate set, make sure we remove any existing Jobs.
         if (!$unPublishTime) {
