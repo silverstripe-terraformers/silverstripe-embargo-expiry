@@ -13,7 +13,7 @@ use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
  * Class WorkflowPublishTargetJob
  *
  * @package Terraformers\EmbargoExpiry\Jobs
- * @property array $options
+ * @property array|null $options
  */
 class UnPublishTargetJob extends AbstractQueuedJob
 {
@@ -25,18 +25,18 @@ class UnPublishTargetJob extends AbstractQueuedJob
     /**
      * WorkflowPublishTargetJob constructor.
      *
-     * @param SiteTree|null $obj
+     * @param DataObject|null $obj
      * @param array $options
      */
-    public function __construct($obj = null, $options = [])
+    public function __construct(?DataObject $obj = null, ?array $options = null)
     {
         $this->totalSteps = 1;
 
-        if ($obj) {
+        if ($obj !== null) {
             $this->setObject($obj);
         }
 
-        if ($options) {
+        if ($options !== null) {
             $this->options = $options;
         }
     }
@@ -47,7 +47,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
     public function getTarget()
     {
         if ($this->target === null) {
-            if ($this->options && array_key_exists('onBeforeGetObject', $this->options)) {
+            if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
                 $superClosure = $this->options['onBeforeGetObject'];
 
                 if ($superClosure instanceof SerializableClosure) {
