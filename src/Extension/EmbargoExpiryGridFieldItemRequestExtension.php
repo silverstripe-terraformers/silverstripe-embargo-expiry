@@ -112,10 +112,10 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      */
     public function removeEmbargoOrExpiry(string $dateField): void
     {
-        /** @var DataObject|EmbargoExpiryExtension $record */
+        /** @var DataObject|EmbargoExpiryExtension|null $record */
         $record = $this->owner->getRecord();
 
-        if (!$record || !$record->exists()) {
+        if ($record === null || !$record->exists()) {
             throw new HTTPResponse_Exception("Bad record", 404);
         }
 

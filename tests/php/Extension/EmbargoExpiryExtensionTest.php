@@ -14,7 +14,7 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\ValidationException;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
-use Terraformers\EmbargoExpiry\Tests\Mock\TestQueuedJobService;
+use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
 
 /**
  * Class EmbargoExpiryExtensionTest
