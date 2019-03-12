@@ -8,9 +8,6 @@ use SuperClosure\SerializableClosure;
 use TractorCow\Fluent\State\FluentState;
 
 /**
- * Please be very aware that Fluent is not an included dependency for this module. As such, test coverage provided in
- * this module can't cov.
- *
  * Class EmbargoExpiryFluentExtension
  *
  * @package Terraformers\EmbargoExpiry\Extension
@@ -32,14 +29,13 @@ class EmbargoExpiryFluentExtension extends DataExtension
     ];
 
     /**
-     * @codeCoverageIgnore
      * @param array|string[] $options
      * @throws Exception
      */
     public function setLocaleOptions(array &$options): void
     {
         if (!class_exists(FluentState::class)) {
-            throw new Exception('Fluent extension not available. Please add it to your compose requirements');
+            throw new Exception('Fluent extension not available. Please add it to your composer requirements');
         }
 
         $locale = FluentState::singleton()->getLocale();
@@ -61,7 +57,6 @@ class EmbargoExpiryFluentExtension extends DataExtension
     }
 
     /**
-     * @codeCoverageIgnore
      * @param array|string[] $options
      * @throws Exception
      */
@@ -71,7 +66,6 @@ class EmbargoExpiryFluentExtension extends DataExtension
     }
 
     /**
-     * @codeCoverageIgnore
      * @param array|string[] $options
      * @throws Exception
      */

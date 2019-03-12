@@ -67,8 +67,6 @@ to execute your jobs periodically.
 
 The expected behaviour is that you can now set an Embargo & Expiry date in each Locale separately from each other, and when those dates pass, the Jobs will publish/un-publish only the record in that Locale.
 
-**Please be very aware that there is no test coverage for this Extension as Fluent is not an included dependency for this module. You will need to cover your own tests if you decide to use this Extension.**
-
 ## Known Limitations
 
  * Does not support recurring embargo or expiry schedules
