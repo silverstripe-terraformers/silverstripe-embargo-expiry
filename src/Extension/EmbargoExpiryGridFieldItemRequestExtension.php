@@ -9,6 +9,7 @@ use SilverStripe\Core\Extension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\VersionedGridFieldItemRequest;
 use SilverStripe\View\ViewableData_Customised;
@@ -67,7 +68,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse|ViewableData_Customised
+     * @return HTTPResponse|ViewableData_Customised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
@@ -89,7 +90,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      *
      * @param array $data
      * @param Form $form
-     * @return HTTPResponse|ViewableData_Customised
+     * @return HTTPResponse|ViewableData_Customised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      */
