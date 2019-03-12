@@ -21,6 +21,12 @@ Features:
  * Add status flags to pages in the tree
  * Support for translations in [silverstripe/fluent](https://github.com/tractorcow/silverstripe-fluent)
 
+## Credit and Authors
+
+- [Chris Penny](https://github.com/chrispenny) - [SilverStripe Embargo & Expiry](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry)
+- [Marcus Nyeholt](https://github.com/nyeholt) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
+- [Andrew Short](https://github.com/ajshort) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
+
 ## Requirements
 
  * SilverStripe 4.0
