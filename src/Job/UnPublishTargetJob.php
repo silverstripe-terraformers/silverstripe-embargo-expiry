@@ -25,7 +25,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
     /**
      * WorkflowPublishTargetJob constructor.
      *
-     * @param DataObject|null $obj
+     * @param DataObject|Versioned|EmbargoExpiryExtension|null $obj
      * @param array $options
      */
     public function __construct(?DataObject $obj = null, ?array $options = null)
@@ -42,7 +42,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
     }
 
     /**
-     * @return DataObject
+     * @return DataObject|Versioned|EmbargoExpiryExtension|null $obj
      */
     public function getTarget()
     {
@@ -66,7 +66,6 @@ class UnPublishTargetJob extends AbstractQueuedJob
      */
     public function getTitle()
     {
-        /** @var SiteTree $target */
         $target = $this->getTarget();
 
         return _t(
@@ -81,7 +80,6 @@ class UnPublishTargetJob extends AbstractQueuedJob
 
     public function process()
     {
-        /** @var DataObject|Versioned|EmbargoExpiryExtension $target */
         $target = $this->getTarget();
 
         if ($target === null) {
