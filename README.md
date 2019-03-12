@@ -8,7 +8,7 @@
 
 Based on the work by [Marcus Nyeholt](https://github.com/nyeholt) and [Andrew Short](https://github.com/ajshort) for the [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/) module.
 
-This module adds the ability to schedule publish and unpublish events at a certain date and time. It can be applied to different model classes, but is commonly used with `SiteTree` where it comes with built-in UI triggers.
+This module adds the ability to schedule publish and unpublish events at a certain date and time. It can be applied to different model classes, but is commonly used with `SiteTree`.
 
 Features:
 
@@ -23,55 +23,20 @@ Features:
 
 ## Credit and Authors
 
-- [Chris Penny](https://github.com/chrispenny) - [SilverStripe Embargo & Expiry](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry)
-- [Marcus Nyeholt](https://github.com/nyeholt) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
-- [Andrew Short](https://github.com/ajshort) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
+ * [Chris Penny](https://github.com/chrispenny) - [SilverStripe Embargo & Expiry](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry)
+ * [Marcus Nyeholt](https://github.com/nyeholt) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
+ * [Andrew Short](https://github.com/ajshort) - [Advanced Workflow](https://github.com/symbiote/silverstripe-advancedworkflow/)
 
 ## Requirements
 
  * SilverStripe 4.0
  * [Queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs)
 
-## Installation
+## Documentation
 
-Install with Composer:
-
-```
-composer require silverstripe-terraformers/embargo-expiry
-```
-
-## Configuration
-
-Add the extension to the `DataObject` classes you want to have embargoed.
-
-```yml
-SilverStripe\CMS\Model\SiteTree:
-  extensions:
-    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension
-```
-
-If you are applying the extension fo a DataObject other than `SiteTree`, ensure it has the `Versioned` extension applied so it can be published/unpublished.
-
-```yml
-MyCustomDataObject:
-  extensions:
-    - SilverStripe\Versioned\Versioned
-    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension
-```
-
-Now run a `dev/build` in your browser,
-or from the command line via `vendor/bin/sake dev/build`.
-
-Finally, ensure you've set up [queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs) correctly
-to execute your jobs periodically.
-
-## Using Embargo & Expiry with Fluent
-
-[Fluent](https://github.com/tractorcow/silverstripe-fluent)
-
-`EmbargoExpiryFluentExtension` is provided to add support for DataObject that have `FluentVersionedExtension` applied.
-
-The expected behaviour is that you can now set an Embargo & Expiry date in each Locale separately from each other, and when those dates pass, the Jobs will publish/un-publish only the record in that Locale.
+ * [Installation](docs/en/installation.md)
+ * [Configuration](docs/en/configuration.md)
+ * [Fluent Support](docs/en/fluent-support.md)
 
 ## Known Limitations
 
