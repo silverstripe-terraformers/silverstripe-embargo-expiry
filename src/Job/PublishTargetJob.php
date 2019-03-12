@@ -25,10 +25,10 @@ class PublishTargetJob extends AbstractQueuedJob
     /**
      * WorkflowPublishTargetJob constructor.
      *
-     * @param SiteTree|null $obj
+     * @param DataObject|null $obj
      * @param array $options
      */
-    public function __construct($obj = null, $options = [])
+    public function __construct(?DataObject $obj = null, ?array $options = null)
     {
         $this->totalSteps = 1;
 
@@ -47,7 +47,7 @@ class PublishTargetJob extends AbstractQueuedJob
     public function getTarget(): ?DataObject
     {
         if ($this->target === null) {
-            if ($this->options && array_key_exists('onBeforeGetObject', $this->options)) {
+            if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
                 $superClosure = $this->options['onBeforeGetObject'];
 
                 if ($superClosure instanceof SerializableClosure) {
