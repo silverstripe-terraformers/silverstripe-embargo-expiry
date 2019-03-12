@@ -2,7 +2,6 @@
 
 namespace Terraformers\EmbargoExpiry\Job;
 
-use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use SuperClosure\SerializableClosure;
@@ -25,7 +24,7 @@ class PublishTargetJob extends AbstractQueuedJob
     /**
      * WorkflowPublishTargetJob constructor.
      *
-     * @param DataObject|null $obj
+     * @param DataObject|Versioned|EmbargoExpiryExtension|null $obj
      * @param array $options
      */
     public function __construct(?DataObject $obj = null, ?array $options = null)
@@ -42,7 +41,7 @@ class PublishTargetJob extends AbstractQueuedJob
     }
 
     /**
-     * @return DataObject
+     * @return DataObject|Versioned|EmbargoExpiryExtension|null
      */
     public function getTarget(): ?DataObject
     {
@@ -66,7 +65,6 @@ class PublishTargetJob extends AbstractQueuedJob
      */
     public function getTitle(): string
     {
-        /** @var SiteTree $target */
         $target = $this->getTarget();
 
         return _t(
@@ -81,7 +79,6 @@ class PublishTargetJob extends AbstractQueuedJob
 
     public function process(): void
     {
-        /** @var DataObject|Versioned|EmbargoExpiryExtension $target */
         $target = $this->getTarget();
 
         if ($target === null) {
