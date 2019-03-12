@@ -1,5 +1,16 @@
 # Change Log
 
+## [1.0.1](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/1.0.1) (13 March 2019)
+
+ * Reduce complexity of EmbargoExpiryExtension methods.
+ * Added test coverage for EmbargoExpiryFluentExtension.
+ * Update linting and tests for Extensions.
+ * Updated doc blocks and conditional statements in Jobs.
+ * Update user docs.
+ * Added .gitattributes.
+ * Add license/contribution/changelog/etc docs.
+ * Scrutinizer fixes.
+
 ## [1.0.0](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/1.0.0) (12 March 2019)
 
 ### NON BACKWARDS COMPATIBLE CHANGE
@@ -31,9 +42,9 @@ Updated README.
 
 ## [v1.0.0 Release Candidate 4](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/v1.0.0-rc4) (15 Feb 2019)
 
-- Remove PHP 5.6 support
-- Increase test coverage to 78% (still more to come)
-- Bug: EmbargoExpiryGridFieldItemRequestExtension Actions are readonly if object isn't editable
+ * Remove PHP 5.6 support
+ * Increase test coverage to 78% (still more to come)
+ * Bug: EmbargoExpiryGridFieldItemRequestExtension Actions are readonly if object isn't editable
 
 ## [v1.0.0 Release Candidate 3](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/v1.0.0-rc3) (25 Sep 2018)
 
@@ -51,12 +62,12 @@ Fluent is not a dependency for this module, as such, no unit tests are provided.
 ### Advanced workflow
 In preparation for Advance Workflow splitting out their Embargo/Expiry feature:
 
-- Added "DesiredPublishDate"
-- Added "DesiredUnPublishDate"
-- Fixed a tonne of linting
-- Added a separate UnPublishTargetJob
-- Added some more extension points
-- Updated some logic to support the idea of a user setting a date, but it not being used immediately
+ * Added "DesiredPublishDate"
+ * Added "DesiredUnPublishDate"
+ * Fixed a tonne of linting
+ * Added a separate UnPublishTargetJob
+ * Added some more extension points
+ * Updated some logic to support the idea of a user setting a date, but it not being used immediately
 
 ### Job queue
 Added some extension points so that devs can change what queue type is used for their jobs.
@@ -66,5 +77,5 @@ Added job processing to test coverage.
 
 ## [v1.0.0 Release Candidate](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/v1.0.0-rc1) (23 Jul 2018)
 
-- Initial POC code release
-- No support for Workflow
+ * Initial POC code release
+ * No support for Workflow
