@@ -1,4 +1,63 @@
+TractorCow\Fluent\Model\Locale:
+  nz:
+    Locale: en_NZ
+    Title: International
+    URLSegment: int
+  jp:
+    Locale: ja_JP
+    Title: Japan
+    URLSegment: jp
+
 SilverStripe\CMS\Model\SiteTree:
   home:
     Title: Home
     URLSegment: home
+  embargo1:
+    Title: Expiry1
+    URLSegment: expiry1
+  expiry1:
+    Title: Expiry1
+    URLSegment: expiry1
+
+SiteTree_Localised:
+  homeNz:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.home
+    Locale: en_NZ
+    Title: Home Int
+    PublishOnDate: '2014-01-07 12:00:00'
+    UnPublishOnDate: '2014-01-08 12:00:00'
+  homeJp:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.home
+    Locale: ja_JP
+    Title: Home JP
+  embargo1Nz:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.embargo1
+    Locale: en_NZ
+    Title: Expiry NZ
+  embargo1Jp:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.embargo1
+    Locale: ja_JP
+    Title: Expiry JP
+  expiry1Nz:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.expiry1
+    Locale: en_NZ
+    Title: Expiry NZ
+  expiry1Jp:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.expiry1
+    Locale: ja_JP
+    Title: Expiry JP
+
+SiteTree_Live:
+  expiry1Nz:
+    ID: =>SilverStripe\CMS\Model\SiteTree.expiry1
+    Title: Expiry NZ
+
+SiteTree_Localised_Live:
+  expiry1Nz:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.expiry1
+    Locale: en_NZ
+    Title: Expiry NZ
+  expiry1Jp:
+    RecordID: =>SilverStripe\CMS\Model\SiteTree.expiry1
+    Locale: ja_JP
+    Title: Expiry JP
