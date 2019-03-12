@@ -1,6 +1,6 @@
 <?php
 
-namespace Terraformers\EmbargoExpiry\Tests\Mock;
+namespace Terraformers\EmbargoExpiry\Tests\Fake;
 
 use SilverStripe\Dev\TestOnly;
 use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;

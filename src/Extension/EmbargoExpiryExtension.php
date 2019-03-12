@@ -26,7 +26,7 @@ use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
  * Class WorkflowEmbargoExpiryExtension
  *
  * @package Terraformers\EmbargoExpiry\Extension
- * @property $this|DataObject $owner
+ * @property DataObject|$this $owner
  * @property DBDatetime $DesiredPublishDate
  * @property DBDatetime $DesiredUnPublishDate
  * @property DBDatetime $PublishOnDate
@@ -783,14 +783,14 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         if ($this->checkAddPermission()) {
-            return $message = _t(
+            return _t(
                 __CLASS__ . '.EDITABLE_NOTICE',
                 'Enter a date and/or time to specify embargo and expiry dates.<br />
                 If an embargo is already set, adding a new one prior to that date\'s passing will overwrite it.'
             );
         }
 
-        return $message = _t(
+        return _t(
             __CLASS__ . '.NOTEDITABLE_NOTICE',
             'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
         );

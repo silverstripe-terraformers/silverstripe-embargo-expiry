@@ -98,9 +98,9 @@ class EmbargoExpiryCMSMainExtension extends Extension
      */
     protected function removeEmbargoOrExpiry(string $className, int $id, string $dateField): void
     {
-        /** @var DataObject|EmbargoExpiryExtension $record */
+        /** @var DataObject|EmbargoExpiryExtension|null $record */
         $record = DataObject::get($className)->byID($id);
-        if (!$record || !$record->exists()) {
+        if ($record === null || !$record->exists()) {
             throw new HTTPResponse_Exception("Bad record ID #$id", 404);
         }
 
