@@ -222,7 +222,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
         $fields = new FieldList();
 
-        $page->addEmbargoExpiryNoticeFields($fields);
+        $page->addNoticeOrWarningFields($fields);
 
         $fieldsArray = $fields->toArray();
 
@@ -247,7 +247,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
         $fields = new FieldList();
 
-        $page->addEmbargoExpiryNoticeFields($fields);
+        $page->addNoticeOrWarningFields($fields);
 
         $fieldsArray = $fields->toArray();
 
@@ -273,7 +273,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
         $fields = new FieldList();
 
-        $page->addEmbargoExpiryNoticeFields($fields);
+        $page->addNoticeOrWarningFields($fields);
 
         $fieldsArray = $fields->toArray();
 
@@ -299,7 +299,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
         $fields = new FieldList();
 
-        $page->addEmbargoExpiryNoticeFields($fields);
+        $page->addNoticeOrWarningFields($fields);
 
         $fieldsArray = $fields->toArray();
 
@@ -354,7 +354,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertContains('Please contact an administrator', $message);
     }
 
-    public function testAddPublishingScheduleFieldsWithoutPermission(): void
+    public function testAddDesiredDateFieldsWithoutPermission(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
 
@@ -364,7 +364,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
         $fields = new FieldList([TabSet::create('Root')]);
 
-        $page->addPublishingScheduleFields($fields);
+        $page->addDesiredDateFields($fields);
 
         $publishField = $fields->dataFieldByName('DesiredPublishDate');
         $unPublishField = $fields->dataFieldByName('DesiredUnPublishDate');
@@ -372,12 +372,26 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertNotNull($publishField);
         $this->assertTrue($publishField->isReadonly());
         $this->assertNotNull($unPublishField);
-        $this->assertTrue($unPublishField->isReadonly());
+        $this->assertTrue($unPublishField->isReadonly());;
+    }
+
+    public function testAddScheduledDateFieldsWithoutPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logOut();
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $fields = new FieldList([TabSet::create('Root')]);
+
+        $page->addScheduledDateFields($fields);
+
         $this->assertNotNull($fields->dataFieldByName('PublishOnDate'));
         $this->assertNotNull($fields->dataFieldByName('UnPublishOnDate'));
     }
 
-    public function testAddPublishingScheduleFieldsWithPermission(): void
+    public function testAddDesiredDateFieldsWithPermission(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
 
@@ -387,7 +401,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
         $fields = new FieldList([TabSet::create('Root')]);
 
-        $page->addPublishingScheduleFields($fields);
+        $page->addDesiredDateFields($fields);
 
         $publishField = $fields->dataFieldByName('DesiredPublishDate');
         $unPublishField = $fields->dataFieldByName('DesiredUnPublishDate');
@@ -396,6 +410,20 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertFalse($publishField->isReadonly());
         $this->assertNotNull($unPublishField);
         $this->assertFalse($unPublishField->isReadonly());
+    }
+
+    public function testAddScheduledDateFieldsWithPermission(): void
+    {
+        Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
+
+        $this->logInWithPermission('ADMIN');
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'fields1');
+        $fields = new FieldList([TabSet::create('Root')]);
+
+        $page->addScheduledDateFields($fields);
+
         $this->assertNotNull($fields->dataFieldByName('PublishOnDate'));
         $this->assertNotNull($fields->dataFieldByName('UnPublishOnDate'));
     }
