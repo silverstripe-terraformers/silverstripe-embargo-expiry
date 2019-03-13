@@ -1,17 +1,6 @@
 # Change Log
 
-## [1.0.1](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/1.0.1) (13 March 2019)
-
- * Reduce complexity of EmbargoExpiryExtension methods.
- * Added test coverage for EmbargoExpiryFluentExtension.
- * Update linting and tests for Extensions.
- * Updated doc blocks and conditional statements in Jobs.
- * Update user docs.
- * Added .gitattributes.
- * Add license/contribution/changelog/etc docs.
- * Scrutinizer fixes.
-
-## [1.0.0](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/1.0.0) (12 March 2019)
+## [1.0.0](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/1.0.0) (13 March 2019)
 
 ### NON BACKWARDS COMPATIBLE CHANGE
 
@@ -28,17 +17,30 @@ RemoveEmbargoExpiry
 
 When you upgrade to `1.0.0`, if you have user groups other than just `ADMIN`, you will need to update those user groups to have these new permissions.
 
+## NON BACKWARDS COMPATIBLE CHANGE - METHOD NAME CHANGES
+
+`EmbargoExpiryExtension`:
+`addEmbargoExpiryNoticeFields` is now `addNoticeOrWarningFields`.
+`addPublishingScheduleFields` is now `addDesiredDateFields`.
+`addPublishingScheduleMessageFields` is now `addScheduledDateFields`.
+
 ### Bugfix
 
 **Publish** button was not being removed when the page was reloaded with an existing `PublishOnDate`.
 
 ### Change
 
-Improved readability of JS.
-
-Renamed `config.yml` to `extensions.yml` and added the `CMSMain` extension by default.
-
-Updated README.
+ * Reduce complexity of EmbargoExpiryExtension methods.
+ * Added test coverage for EmbargoExpiryFluentExtension.
+ * Update linting and tests for Extensions.
+ * Updated doc blocks and conditional statements in Jobs.
+ * Update user docs.
+ * Added .gitattributes.
+ * Add license/contribution/changelog/etc docs.
+ * Scrutinizer fixes.
+ * Improved readability of JS.
+ * Renamed `config.yml` to `extensions.yml` and added the `CMSMain` extension by default.
+ * Updated README.
 
 ## [v1.0.0 Release Candidate 4](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/releases/v1.0.0-rc4) (15 Feb 2019)
 

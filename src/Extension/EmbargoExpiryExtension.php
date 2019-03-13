@@ -12,7 +12,6 @@ use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\FieldType\DBField;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -90,8 +89,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             'UnPublishJobID',
         ]);
 
-        $this->addEmbargoExpiryNoticeFields($fields);
-        $this->addPublishingScheduleFields($fields);
+        $this->addNoticeOrWarningFields($fields);
+        $this->addDesiredDateFields($fields);
+        $this->addScheduledDateFields($fields);
     }
 
     /**
@@ -178,9 +178,12 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $embargo = $this->owner->getIsPublishScheduled();
         $expiry = $this->owner->getIsUnPublishScheduled();
 
-        if ($embargo || $expiry) {
-            unset($flags['addedtodraft'], $flags['modified']);
+        if (!$embargo && !$expiry) {
+            return;
         }
+
+        // @todo need to move these into badges so that we don't have to remove these messages.
+        unset($flags['addedtodraft'], $flags['modified']);
 
         if ($embargo && $expiry) {
             $flags['embargo_expiry'] = [
@@ -193,7 +196,11 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                     $this->owner->UnPublishOnDate
                 ),
             ];
-        } elseif ($embargo) {
+
+            return;
+        }
+
+        if ($embargo) {
             $flags['embargo'] = [
                 'text' => _t(__CLASS__ . '.BADGE_PUBLISH', 'Embargo'),
                 'title' => sprintf(
@@ -202,16 +209,18 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                     $this->owner->PublishOnDate
                 ),
             ];
-        } elseif ($expiry) {
-            $flags['expiry'] = [
-                'text' => _t(__CLASS__ . '.BADGE_UNPUBLISH', 'Expiry'),
-                'title' => sprintf(
-                    '%s: %s',
-                    _t(__CLASS__ . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
-                    $this->owner->UnPublishOnDate
-                ),
-            ];
+
+            return;
         }
+
+        $flags['expiry'] = [
+            'text' => _t(__CLASS__ . '.BADGE_UNPUBLISH', 'Expiry'),
+            'title' => sprintf(
+                '%s: %s',
+                _t(__CLASS__ . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
+                $this->owner->UnPublishOnDate
+            ),
+        ];
     }
 
     /**
@@ -317,6 +326,50 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     }
 
     /**
+     * @return int
+     */
+    public function getDesiredPublishDateAsTimestamp(): int
+    {
+        /** @var DBDatetime $desiredPublishTimeField */
+        $desiredPublishTimeField = $this->owner->dbObject('DesiredPublishDate');
+
+        return $desiredPublishTimeField->getTimestamp();
+    }
+
+    /**
+     * @return int
+     */
+    public function getPublishOnDateAsTimestamp(): int
+    {
+        /** @var DBDatetime $desiredPublishTimeField */
+        $desiredPublishTimeField = $this->owner->dbObject('PublishOnDate');
+
+        return $desiredPublishTimeField->getTimestamp();
+    }
+
+    /**
+     * @return int
+     */
+    public function getDesiredUnPublishDateAsTimestamp(): int
+    {
+        /** @var DBDatetime $desiredPublishTimeField */
+        $desiredPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
+
+        return $desiredPublishTimeField->getTimestamp();
+    }
+
+    /**
+     * @return int
+     */
+    public function getUnPublishOnDateAsTimestamp(): int
+    {
+        /** @var DBDatetime $desiredPublishTimeField */
+        $desiredPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
+
+        return $desiredPublishTimeField->getTimestamp();
+    }
+
+    /**
      * Ensure the existence (or removal) of a publish job at the specified time.
      */
     public function ensurePublishJob(): void
@@ -332,14 +385,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // New desired date (if set).
-        /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('DesiredPublishDate');
-        $desiredPublishTime = $desiredPublishTimeField->getTimestamp();
-
+        $desiredPublishTime = $this->getDesiredPublishDateAsTimestamp();
         // Existing publish and un-publish date (if set).
-        /** @var DBDatetime $publishTimeField */
-        $publishTimeField = $this->owner->dbObject('PublishOnDate');
-        $publishTime = $publishTimeField->getTimestamp();
+        $publishTime = $this->getPublishOnDateAsTimestamp();
 
         // If there is no PublishOnDate set, make sure we remove any existing Jobs.
         if (!$publishTime) {
@@ -370,14 +418,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // New desired date (if set).
-        /** @var DBDatetime $desiredUnPublishTimeField */
-        $desiredUnPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
-        $desiredUnPublishTime = $desiredUnPublishTimeField->getTimestamp();
-
+        $desiredUnPublishTime = $this->getDesiredUnPublishDateAsTimestamp();
         // Existing publish and un-publish date (if set).
-        /** @var DBDatetime $unPublishTimeField */
-        $unPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
-        $unPublishTime = $unPublishTimeField->getTimestamp();
+        $unPublishTime = $this->getUnPublishOnDateAsTimestamp();
 
         // If there is no UnPublishOnDate set, make sure we remove any existing Jobs.
         if (!$unPublishTime) {
@@ -396,18 +439,12 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function objectRequiresPublishJob(): bool
     {
-        // New desired date (if set).
-        /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('DesiredPublishDate');
-        $desiredPublishTime = $desiredPublishTimeField->getTimestamp();
+        // New desired dates (if set).
+        $desiredPublishTime = $this->getDesiredPublishDateAsTimestamp();
+        $desiredUnPublishTime = $this->getDesiredUnPublishDateAsTimestamp();
 
-        /** @var DBDatetime $desiredUnPublishTimeField */
-        $desiredUnPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
-        $desiredUnPublishTime = $desiredUnPublishTimeField->getTimestamp();
-
-        /** @var DBDatetime $unPublishTimeField */
-        $unPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
-        $unPublishTime = $unPublishTimeField->getTimestamp();
+        // Existing UnPublishOnDate (if set).
+        $unPublishTime = $this->getUnPublishOnDateAsTimestamp();
 
         // If there is no desired publish time set, then there is nothing for us to change.
         if (!$desiredPublishTime) {
@@ -427,12 +464,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return true;
         }
 
-        // You  desired and set dates are not sequential, so these are invalid.
-        if (!$this->datesAreSequential($desiredPublishTime, $desiredUnPublishTime, $unPublishTime)) {
-            return false;
-        }
-
-        return true;
+        return $this->datesAreSequential($desiredPublishTime, $desiredUnPublishTime, $unPublishTime);
     }
 
     /**
@@ -441,9 +473,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function objectRequiresUnPublishJob(): bool
     {
         // New desired date (if set).
-        /** @var DBDatetime $desiredUnPublishTimeField */
-        $desiredUnPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
-        $desiredUnPublishTime = $desiredUnPublishTimeField->getTimestamp();
+        $desiredUnPublishTime = $this->getDesiredUnPublishDateAsTimestamp();
 
         // If there is no desired un-publish time set, then there is nothing for us to change.
         if (!$desiredUnPublishTime) {
@@ -475,16 +505,12 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         int $unPublishTime
     ): bool {
         // The desired publish date is set after the desired un-publish date, and you require sequential dates.
-        if ($desiredUnPublishTime
-            && $desiredPublishTime > $desiredUnPublishTime
-        ) {
+        if ($desiredUnPublishTime && $desiredPublishTime > $desiredUnPublishTime) {
             return false;
         }
 
         // The desired publish date is set after the active un-publish date, and you require sequential dates.
-        if ($unPublishTime
-            && $desiredPublishTime > $unPublishTime
-        ) {
+        if ($unPublishTime && $desiredPublishTime > $unPublishTime) {
             return false;
         }
 
@@ -670,10 +696,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param FieldList $fields
      */
-    public function addPublishingScheduleFields(FieldList $fields): void
+    public function addDesiredDateFields(FieldList $fields): void
     {
-        $message = $this->getEmbargoExpiryFieldNoticeMessage();
-
         $fields->findOrMakeTab(
             'Root.PublishingSchedule',
             _t(__CLASS__ . '.TAB_TITLE', 'Publishing Schedule')
@@ -698,6 +722,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ]
         );
 
+        $message = $this->getEmbargoExpiryFieldNoticeMessage();
+
         if ($message !== null) {
             $fields->addFieldToTab(
                 'Root.PublishingSchedule',
@@ -708,8 +734,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
                 'DesiredPublishDate'
             );
         }
-
-        $this->addPublishingScheduleMessageFields($fields);
 
         // You have permission to edit this record. Exit early.
         if ($this->owner->checkAddPermission()) {
@@ -724,7 +748,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param FieldList $fields
      */
-    public function addPublishingScheduleMessageFields(FieldList $fields): void
+    public function addScheduledDateFields(FieldList $fields): void
     {
         if (!$this->getIsPublishScheduled() && !$this->getIsUnPublishScheduled()) {
             return;
@@ -760,62 +784,34 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     }
 
     /**
-     * @param array $conditions
-     * @return string
+     * @return null|string
      */
-    public function getEmbargoExpiryNoticeMessage(array $conditions): ?string
+    public function getEmbargoExpiryFieldNoticeMessage(): ?string
     {
-        if (count($conditions) === 0) {
+        // true and null are both valid isEditable() values for indicating that a user has permission to edit (from the
+        // point of view of this extension).
+        if ($this->isEditable() === false) {
             return null;
         }
 
-        // true and null are both valid isEditable() values for indicating that a user has permission to edit (from the
-        // point of view of this extension).
-        if ($this->isEditable() !== false) {
-            return sprintf(
-                _t(
-                    __CLASS__ . '.EMBARGO_EDITING_NOTICE',
-                    'You are currently editing a record that has an %s date set.'
-                ),
-                implode(' and ', array_column($conditions, 'name'))
+        if ($this->checkAddPermission()) {
+            return _t(
+                __CLASS__ . '.EDITABLE_NOTICE',
+                'Enter a date and/or time to specify embargo and expiry dates.<br />
+                If an embargo is already set, adding a new one prior to that date\'s passing will overwrite it.'
             );
         }
 
-        if (!$this->checkRemovePermission()) {
-            return sprintf(
-                _t(
-                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
-                    'This record has an %s date set, and cannot currently be edited. An administrator will need
-                    to remove the scheduled embargo date before you are able to edit this record.'
-                ),
-                implode(' and ', array_column($conditions, 'name'))
-            );
-        }
-
-        if (array_key_exists('embargo', $conditions)) {
-            return sprintf(
-                _t(
-                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
-                    'This record has an %s date set, and cannot currently be edited. You will need to remove the
-                    scheduled embargo date in order to edit this record.'
-                ),
-                implode(' and ', array_column($conditions, 'name'))
-            );
-        }
-
-        return sprintf(
-            _t(
-                __CLASS__ . '.EMBARGO_SET_NOTICE',
-                'This record has an %s date set.'
-            ),
-            implode(' and ', array_column($conditions, 'name'))
+        return _t(
+            __CLASS__ . '.NOTEDITABLE_NOTICE',
+            'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
         );
     }
 
     /**
      * @param FieldList $fields
      */
-    public function addEmbargoExpiryNoticeFields(FieldList $fields): void
+    public function addNoticeOrWarningFields(FieldList $fields): void
     {
         $conditions = $this->getEmbargoExpiryNoticeFieldConditions();
 
@@ -885,27 +881,55 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     }
 
     /**
-     * @return null|string
+     * @param array $conditions
+     * @return string
      */
-    public function getEmbargoExpiryFieldNoticeMessage(): ?string
+    public function getEmbargoExpiryNoticeMessage(array $conditions): ?string
     {
-        // true and null are both valid isEditable() values for indicating that a user has permission to edit (from the
-        // point of view of this extension).
-        if ($this->isEditable() === false) {
+        if (count($conditions) === 0) {
             return null;
         }
 
-        if ($this->checkAddPermission()) {
-            return _t(
-                __CLASS__ . '.EDITABLE_NOTICE',
-                'Enter a date and/or time to specify embargo and expiry dates.<br />
-                If an embargo is already set, adding a new one prior to that date\'s passing will overwrite it.'
+        // true and null are both valid isEditable() values for indicating that a user has permission to edit (from the
+        // point of view of this extension).
+        if ($this->isEditable() !== false) {
+            return sprintf(
+                _t(
+                    __CLASS__ . '.EMBARGO_EDITING_NOTICE',
+                    'You are currently editing a record that has an %s date set.'
+                ),
+                implode(' and ', array_column($conditions, 'name'))
             );
         }
 
-        return _t(
-            __CLASS__ . '.NOTEDITABLE_NOTICE',
-            'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
+        if (!$this->checkRemovePermission()) {
+            return sprintf(
+                _t(
+                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
+                    'This record has an %s date set, and cannot currently be edited. An administrator will need
+                    to remove the scheduled embargo date before you are able to edit this record.'
+                ),
+                implode(' and ', array_column($conditions, 'name'))
+            );
+        }
+
+        if (array_key_exists('embargo', $conditions)) {
+            return sprintf(
+                _t(
+                    __CLASS__ . '.EMBARGO_NONREMOVABLE_NOTICE',
+                    'This record has an %s date set, and cannot currently be edited. You will need to remove the
+                    scheduled embargo date in order to edit this record.'
+                ),
+                implode(' and ', array_column($conditions, 'name'))
+            );
+        }
+
+        return sprintf(
+            _t(
+                __CLASS__ . '.EMBARGO_SET_NOTICE',
+                'This record has an %s date set.'
+            ),
+            implode(' and ', array_column($conditions, 'name'))
         );
     }
 
