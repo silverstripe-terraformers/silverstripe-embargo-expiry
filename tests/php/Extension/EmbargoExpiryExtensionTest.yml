@@ -42,4 +42,18 @@ SilverStripe\CMS\Model\SiteTree:
     URLSegment: fields1
     PublishOnDate: '2014-01-07 12:00:00'
     UnPublishOnDate: '2014-01-08 12:00:00'
-
+  validatePass:
+    Title: Validate Pass
+    URLSegment: validatepass
+    DesiredPublishDate: '2014-01-07 12:00:00'
+    DesiredUnPublishDate: '2014-01-08 12:00:00'
+  validateFail1:
+    Title: Validate Pass
+    URLSegment: validatepass
+    DesiredPublishDate: '2014-01-08 12:00:00'
+    DesiredUnPublishDate: '2014-01-07 12:00:00'
+  validateFail2:
+    Title: Validate Pass
+    URLSegment: validatepass
+    DesiredPublishDate: '2014-01-08 12:00:00'
+    UnPublishOnDate: '2014-01-07 12:00:00'
