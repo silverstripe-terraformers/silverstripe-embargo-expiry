@@ -12,6 +12,7 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\ValidationException;
+use SilverStripe\ORM\ValidationResult;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
@@ -450,5 +451,44 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         $this->assertNotNull($actions->fieldByName('action_removeEmbargoAction'));
         $this->assertNotNull($actions->fieldByName('action_removeExpiryAction'));
+    }
+
+    public function testValidatePass(): void
+    {
+        Config::modify()->set(SiteTree::class, 'enforce_sequential_dates', true);
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'validatePass');
+        $validationResult = new ValidationResult();
+
+        $page->extend('validate', $validationResult);
+
+        $this->assertTrue($validationResult->isValid());
+    }
+
+    public function testValidateFailDesired(): void
+    {
+        Config::modify()->set(SiteTree::class, 'enforce_sequential_dates', true);
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'validateFail1');
+        $validationResult = new ValidationResult();
+
+        $page->extend('validate', $validationResult);
+
+        $this->assertFalse($validationResult->isValid());
+    }
+
+    public function testValidateFailSetDate(): void
+    {
+        Config::modify()->set(SiteTree::class, 'enforce_sequential_dates', true);
+
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'validateFail2');
+        $validationResult = new ValidationResult();
+
+        $page->extend('validate', $validationResult);
+
+        $this->assertFalse($validationResult->isValid());
     }
 }

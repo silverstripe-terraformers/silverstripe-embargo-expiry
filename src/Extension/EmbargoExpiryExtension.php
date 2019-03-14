@@ -12,6 +12,7 @@ use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -92,6 +93,45 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $this->addNoticeOrWarningFields($fields);
         $this->addDesiredDateFields($fields);
         $this->addScheduledDateFields($fields);
+    }
+
+    /**
+     * If this Object requires sequential embargo/expiry dates, then let's make sure it has that.
+     *
+     * @param ValidationResult $validationResult
+     * @return ValidationResult
+     */
+    public function validate(ValidationResult $validationResult): ValidationResult
+    {
+        // We don't require sequential dates.
+        if (!$this->owner->config()->get('enforce_sequential_dates')) {
+            return $validationResult;
+        }
+
+        // We only have 1 or 0 dates set, so we don't need to check for sequential.
+        if (!$this->owner->DesiredPublishDate) {
+            return $validationResult;
+        }
+
+        // If a DesiredUnPublish date is set, then use that, otherwise use UnPublishOnDate.
+        $unPublishDate = $this->owner->DesiredUnPublishDate ?? $this->owner->UnPublishOnDate;
+
+        // There is no DesiredUnPublish or UnPublishOnDate, so we don't need to check for sequential.
+        if (!$unPublishDate) {
+            return $validationResult;
+        }
+
+        if (strtotime($this->owner->DesiredPublishDate) > strtotime($unPublishDate)) {
+            $validationResult->addFieldError(
+                'DesiredPublishDate',
+                _t(
+                    __CLASS__ . 'FAILED_SEQUENTIAL_DATES',
+                    'Your publish date cannot be set for after your un-publish date.'
+                )
+            );
+        }
+
+        return $validationResult;
     }
 
     /**
