@@ -555,15 +555,18 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             $queueID = null;
         }
 
+        // The value that will be used to update our PublishOnDate field.
+        $updateTime = date('Y-m-d H:i:s', $desiredPublishTime);
+
         // Create a new job with the specified schedule. If publish time is in the past, run the Job immediately.
+        $jobTime = ($desiredPublishTime > $now) ? date('Y-m-d H:i:s', $desiredPublishTime) : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $jobTime = $desiredPublishTime > $now ? date('Y-m-d H:i:s', $desiredPublishTime) : null;
         $job = new PublishTargetJob($this->owner, $options);
         $this->owner->PublishJobID = Injector::inst()->get(QueuedJobService::class)
             ->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our PublishOnDate is up to date.
-        $this->updatePublishOnDate();
+        $this->updatePublishOnDate($updateTime);
     }
 
     /**
@@ -603,15 +606,18 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             $queueID = null;
         }
 
+        // The value that will be used to update our UnPublishOnDate field.
+        $updateTime = date('Y-m-d H:i:s', $desiredUnPublishTime);
+
         // Create a new job with the specified schedule. If unpublish time is in the past, run the Job immediately.
+        $jobTime = ($desiredUnPublishTime > $now) ? date('Y-m-d H:i:s', $desiredUnPublishTime) : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $jobTime = $desiredUnPublishTime > $now ? date('Y-m-d H:i:s', $desiredUnPublishTime) : null;
         $job = new UnPublishTargetJob($this->owner, $options);
         $this->owner->UnPublishJobID = Injector::inst()->get(QueuedJobService::class)
             ->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our UnPublishOnDate is up to date.
-        $this->updateUnPublishOnDate();
+        $this->updateUnPublishOnDate($updateTime);
     }
 
     /**
@@ -969,18 +975,32 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $this->isUnPublishJobRunning = $bool;
     }
 
-    private function updatePublishOnDate(): void
+    /**
+     * @param string|null $desiredPublishTime
+     */
+    private function updatePublishOnDate(?string $desiredPublishTime = null): void
     {
+        if ($desiredPublishTime === null) {
+            $desiredPublishTime = $this->owner->DesiredPublishDate;
+        }
+
         // Make sure our PublishOnDate field is set correctly.
-        $this->owner->PublishOnDate = $this->owner->DesiredPublishDate;
+        $this->owner->PublishOnDate = $desiredPublishTime;
         // Remove the DesiredPublishDate.
         $this->owner->DesiredPublishDate = null;
     }
 
-    private function updateUnPublishOnDate(): void
+    /**
+     * @param string|null $desiredUnPublishTime
+     */
+    private function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
     {
+        if ($desiredUnPublishTime === null) {
+            $desiredUnPublishTime = $this->owner->DesiredUnPublishDate;
+        }
+
         // Make sure our UnPublishOnDate field is set correctly.
-        $this->owner->UnPublishOnDate = $this->owner->DesiredUnPublishDate;
+        $this->owner->UnPublishOnDate = $desiredUnPublishTime;
         // Remove the DesiredUnPublishDate.
         $this->owner->DesiredUnPublishDate = null;
     }
