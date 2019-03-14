@@ -32,7 +32,6 @@ use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
  * @property DBDatetime $DesiredUnPublishDate
  * @property DBDatetime $PublishOnDate
  * @property DBDatetime $UnPublishOnDate
- * @property bool $AllowEmbargoedEditing
  * @property int $PublishJobID
  * @property int $UnPublishJobID
  * @method QueuedJobDescriptor PublishJob()
