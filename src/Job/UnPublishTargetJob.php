@@ -95,6 +95,9 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $target->writeWithoutVersion();
         $target->doUnpublish();
 
+        // This allows actions to occur after the unpublish job has run such as creating snapshots
+        $target->invokeWithExtensions('afterUnPublishTargetJob', $this->options);
+
         $target->setIsUnPublishJobRunning(false);
         $this->completeJob();
     }

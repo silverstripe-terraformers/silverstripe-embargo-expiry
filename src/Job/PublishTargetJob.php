@@ -94,6 +94,9 @@ class PublishTargetJob extends AbstractQueuedJob
         $target->writeWithoutVersion();
         $target->publishRecursive();
 
+        // This allows actions to occur after the publish job has run such as creating snapshots
+        $target->invokeWithExtensions('afterPublishTargetJob', $this->options);
+
         $target->setIsPublishJobRunning(false);
         $this->completeJob();
     }
