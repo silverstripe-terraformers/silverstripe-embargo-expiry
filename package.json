@@ -1,9 +1,9 @@
 {
   "name": "terraformers-embargo-expiry",
-  "version": "0.1",
+  "version": "1.0.0",
   "description": "Embargo & expiry module for SilverStrip CMS",
   "engines": {
-    "node": "^6.x"
+    "node": "^10.x"
   },
   "scripts": {
     "build": "NODE_ENV=production webpack -p --bail --progress",
@@ -34,6 +34,6 @@
     "@silverstripe/webpack-config": "^0.11.0"
   },
   "dependencies": {
-    "jquery": "^3.2.1"
+    "jquery": "^3.5.0"
   }
 }
