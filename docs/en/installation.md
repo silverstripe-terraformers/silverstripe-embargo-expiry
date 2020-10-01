@@ -14,7 +14,8 @@ SilverStripe\CMS\Model\SiteTree:
     - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension
 ```
 
-If you are applying the extension fo a DataObject other than `SiteTree`, ensure it has the `Versioned` extension applied so it can be published/unpublished.
+If you are applying the extension fo a DataObject other than `SiteTree`, ensure it has the `Versioned` extension applied
+so it can be published/unpublished.
 
 ```yml
 MyCustomDataObject:
@@ -25,6 +26,7 @@ MyCustomDataObject:
 
 Now run a `dev/build?flush=all` in your browser, or from the command line via `vendor/bin/sake dev/build flush=all`.
 
-Finally, ensure you've set up [queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs) correctly to execute your jobs periodically.
+Finally, ensure you've set up [queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs) correctly to execute
+your jobs periodically.
 
 For more information please see [configuration](configuration.md).
