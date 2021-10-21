@@ -28,7 +28,7 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^5.7",
-    "tractorcow/silverstripe-fluent": "^4.2.0"
+    "tractorcow/silverstripe-fluent": "^5.0.0"
   },
   "extra": {
     "expose": [
