@@ -373,7 +373,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertNotNull($publishField);
         $this->assertTrue($publishField->isReadonly());
         $this->assertNotNull($unPublishField);
-        $this->assertTrue($unPublishField->isReadonly());;
+        $this->assertTrue($unPublishField->isReadonly());
     }
 
     public function testAddScheduledDateFieldsWithoutPermission(): void
