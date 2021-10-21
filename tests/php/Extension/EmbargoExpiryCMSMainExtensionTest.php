@@ -72,12 +72,12 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
         // Post a request to remove the embargo date.
         $this->post(
             sprintf('admin/pages/edit/EditForm/%s', $id),
-            array(
+            [
                 'ClassName' => SiteTree::class,
                 'ID' => $id,
                 'action_removeEmbargoAction' => 1,
                 'ajax' => 1,
-            )
+            ]
         );
 
         // Refetch object from DB.
@@ -102,12 +102,12 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
         // Post a request to remove the embargo date.
         $this->post(
             sprintf('admin/pages/edit/EditForm/%s', $id),
-            array(
+            [
                 'ClassName' => SiteTree::class,
                 'ID' => $id,
                 'action_removeExpiryAction' => 1,
                 'ajax' => 1,
-            )
+            ]
         );
 
         // Refetch object from DB.
@@ -124,12 +124,12 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
         // Post a request to remove the embargo date.
         $response = $this->post(
             'admin/pages/edit/EditForm/99',
-            array(
+            [
                 'ClassName' => SiteTree::class,
                 'ID' => 99,
                 'action_removeEmbargoAction' => 1,
                 'ajax' => 1,
-            )
+            ]
         );
 
         $this->assertEquals(404, $response->getStatusCode());
@@ -151,12 +151,12 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
         // Post a request to remove the embargo date.
         $this->post(
             sprintf('admin/pages/edit/EditForm/%s', $id),
-            array(
+            [
                 'ClassName' => SiteTree::class,
                 'ID' => $id,
                 'action_removeExpiryAction' => 1,
                 'ajax' => 1,
-            )
+            ]
         );
     }
 }
