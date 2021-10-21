@@ -1,6 +1,6 @@
 # Embargo/Expiry Module
 
-[![Build Status](http://img.shields.io/travis/silverstripe-terraformers/silverstripe-embargo-expiry.svg?style=flat)](https://travis-ci.org/silverstripe-terraformers/silverstripe-embargo-expiry)
+![example workflow](https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/actions/workflows/main.yml/badge.svg)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/silverstripe-terraformers/silverstripe-embargo-expiry/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/silverstripe-terraformers/silverstripe-embargo-expiry/?branch=master)
 [![codecov](https://codecov.io/gh/silverstripe-terraformers/silverstripe-embargo-expiry/branch/master/graph/badge.svg)](https://codecov.io/gh/silverstripe-terraformers/silverstripe-embargo-expiry)
 
