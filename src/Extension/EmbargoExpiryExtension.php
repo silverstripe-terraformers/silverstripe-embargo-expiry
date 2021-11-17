@@ -120,7 +120,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return $validationResult;
         }
 
-        if (strtotime($this->owner->DesiredPublishDate) > strtotime($unPublishDate)) {
+        $publishTime = new \DateTimeImmutable($this->owner->DesiredPublishDate);
+        $unpublishTime = new \DateTimeImmutable($unPublishDate);
+        if ($publishTime > $unpublishTime) {
             $validationResult->addFieldError(
                 'DesiredPublishDate',
                 _t(
@@ -882,7 +884,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             $message .= sprintf(
                 '<br /><strong>%s</strong>: %s%s',
                 ucfirst($name),
-                $data['date'],
+                $data['date']->format('Y-m-d H:i T'),
                 $warning
             );
         }
@@ -901,23 +903,24 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function getEmbargoExpiryNoticeFieldConditions(): array
     {
         $conditions = [];
+        $now = new \DateTimeImmutable();
 
         if ($this->getIsPublishScheduled()) {
-            $time = strtotime($this->owner->PublishOnDate);
+            $time = new \DateTimeImmutable($this->owner->PublishOnDate);
 
             $conditions['embargo'] = [
-                'date' => $this->owner->PublishOnDate,
-                'warning' => ($time > 0 && $time < time()),
+                'date' => $time,
+                'warning' => ($time < $now),
                 'name' => _t(__CLASS__ . '.EMBARGO_NAME', 'embargo'),
             ];
         }
 
         if ($this->getIsUnPublishScheduled()) {
-            $time = strtotime($this->owner->UnPublishOnDate);
+            $time = new \DateTimeImmutable($this->owner->UnPublishOnDate);
 
             $conditions['expiry'] = [
-                'date' => $this->owner->UnPublishOnDate,
-                'warning' => ($time > 0 && $time < time()),
+                'date' => $time,
+                'warning' => ($time < $now),
                 'name' => _t(__CLASS__ . '.EXPIRY_NAME', 'expiry'),
             ];
         }
