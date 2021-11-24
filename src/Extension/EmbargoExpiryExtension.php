@@ -22,6 +22,7 @@ use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
+use DateTimeImmutable;
 
 /**
  * Class WorkflowEmbargoExpiryExtension
@@ -120,7 +121,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return $validationResult;
         }
 
-        if (strtotime($this->owner->DesiredPublishDate) > strtotime($unPublishDate)) {
+        $publishTime = new DateTimeImmutable($this->owner->DesiredPublishDate);
+        $unpublishTime = new DateTimeImmutable($unPublishDate);
+        if ($publishTime > $unpublishTime) {
             $validationResult->addFieldError(
                 'DesiredPublishDate',
                 _t(
@@ -901,23 +904,24 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function getEmbargoExpiryNoticeFieldConditions(): array
     {
         $conditions = [];
+        $now = DBDatetime::now()->getTimestamp();
 
-        if ($this->getIsPublishScheduled()) {
-            $time = strtotime($this->owner->PublishOnDate);
+        if ($this->getPublishOnDateAsTimestamp()) {
+            $time = new DateTimeImmutable($this->owner->PublishOnDate);
 
             $conditions['embargo'] = [
-                'date' => $this->owner->PublishOnDate,
-                'warning' => ($time > 0 && $time < time()),
+                'date' => $time->format('Y-m-d H:i T'),
+                'warning' => ($time->getTimestamp() < $now),
                 'name' => _t(__CLASS__ . '.EMBARGO_NAME', 'embargo'),
             ];
         }
 
-        if ($this->getIsUnPublishScheduled()) {
-            $time = strtotime($this->owner->UnPublishOnDate);
+        if ($this->getUnPublishOnDateAsTimestamp()) {
+            $time = new DateTimeImmutable($this->owner->UnPublishOnDate);
 
             $conditions['expiry'] = [
-                'date' => $this->owner->UnPublishOnDate,
-                'warning' => ($time > 0 && $time < time()),
+                'date' => $time->format('Y-m-d H:i T'),
+                'warning' => ($time->getTimestamp() < $now),
                 'name' => _t(__CLASS__ . '.EXPIRY_NAME', 'expiry'),
             ];
         }

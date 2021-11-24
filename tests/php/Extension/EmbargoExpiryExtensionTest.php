@@ -16,6 +16,7 @@ use SilverStripe\ORM\ValidationResult;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
+use DateTimeImmutable;
 
 /**
  * Class EmbargoExpiryExtensionTest
@@ -183,7 +184,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     {
         $service = $this->getService();
         /** @var SiteTree|EmbargoExpiryExtension $page */
-        $page = $this->objFromFixture(SiteTree::class, 'expiry1');
+        $page = $this->objFromFixture(SiteTree::class, 'expiryEmpty');
 
         // UnPublishDate is in the past, so it should be run immediately when we initialise it.
         $page->DesiredUnPublishDate = '2014-01-01 12:00:00';
@@ -233,9 +234,14 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $literalField = $fieldsArray[0];
         $content = $literalField->getContent();
 
+        $time = new DateTimeImmutable();
+
+        $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
+        $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
+
         $this->assertNotContains('cannot currently be edited', $content);
-        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
-        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+        $this->assertContains($expectedEmbargoMessage, $content);
+        $this->assertContains($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsCannotEditGuest(): void
@@ -258,10 +264,15 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $literalField = $fieldsArray[0];
         $content = $literalField->getContent();
 
+        $time = new DateTimeImmutable();
+
+        $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
+        $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
+
         $this->assertContains('cannot currently be edited', $content);
         $this->assertContains('An administrator will need', $content);
-        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
-        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+        $this->assertContains($expectedEmbargoMessage, $content);
+        $this->assertContains($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsCannotEditAdmin(): void
@@ -284,10 +295,15 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $literalField = $fieldsArray[0];
         $content = $literalField->getContent();
 
+        $now = new DateTimeImmutable();
+
+        $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $now->getTimezone()->getName());
+        $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $now->getTimezone()->getName());
+
         $this->assertContains('cannot currently be edited', $content);
         $this->assertContains('You will need to remove', $content);
-        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00', $content);
-        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00', $content);
+        $this->assertContains($expectedEmbargoMessage, $content);
+        $this->assertContains($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsWarning(): void
@@ -297,7 +313,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->logInWithPermission('ADMIN');
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
-        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $page = $this->objFromFixture(SiteTree::class, 'messages2');
         $fields = new FieldList();
 
         $page->addNoticeOrWarningFields($fields);
@@ -310,9 +326,20 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $literalField = $fieldsArray[0];
         $content = $literalField->getContent();
 
+        $time = new DateTimeImmutable();
+
+        $expectedEmbargoMessage = sprintf(
+            'Embargo</strong>: 2014-01-03 12:00 %s<strong> (this date is in the',
+            $time->getTimezone()->getName()
+        );
+        $expectedExpiryMessage = sprintf(
+            'Expiry</strong>: 2014-01-04 12:00 %s<strong> (this date is in the',
+            $time->getTimezone()->getName()
+        );
+
         // Test that the two warning messages were added.
-        $this->assertContains('Embargo</strong>: 2014-01-07 12:00:00<strong> (this date is in the', $content);
-        $this->assertContains('Expiry</strong>: 2014-01-08 12:00:00<strong> (this date is in the', $content);
+        $this->assertContains($expectedEmbargoMessage, $content);
+        $this->assertContains($expectedExpiryMessage, $content);
     }
 
     public function testEmbargoExpiryFieldNoticeMessageNotEditable(): void
@@ -490,5 +517,101 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page->extend('validate', $validationResult);
 
         $this->assertFalse($validationResult->isValid());
+    }
+
+    public function testEmbargoMessagePassed(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'embargo1');
+
+        $time = new DateTimeImmutable();
+
+        $expectedConditions = [];
+        $expectedConditions['embargo'] = [
+            'date' => sprintf('2014-01-03 12:00 %s', $time->getTimezone()->getName()),
+            'warning' => true,
+            'name' => 'embargo',
+        ];
+
+        $this->assertEquals(
+            $expectedConditions,
+            $page->getEmbargoExpiryNoticeFieldConditions(),
+            '', // default value
+            0.0, // default value
+            10, // default value
+            true // sort both arrays so that the order of items doesn't matter
+        );
+    }
+
+    public function testEmbargoMessageFuture(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'embargo2');
+
+        $time = new DateTimeImmutable();
+
+        $expectedConditions = [];
+        $expectedConditions['embargo'] = [
+            'date' => sprintf('2014-01-08 12:00 %s', $time->getTimezone()->getName()),
+            'warning' => false,
+            'name' => 'embargo',
+        ];
+
+        $this->assertEquals(
+            $expectedConditions,
+            $page->getEmbargoExpiryNoticeFieldConditions(),
+            '', // default value
+            0.0, // default value
+            10, // default value
+            true // sort both arrays so that the order of items doesn't matter
+        );
+    }
+
+    public function testExpiryMessagePassed(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'expiry1');
+
+        $time = new DateTimeImmutable();
+
+        $expectedConditions = [];
+        $expectedConditions['expiry'] = [
+            'date' => sprintf('2014-01-03 12:00 %s', $time->getTimezone()->getName()),
+            'warning' => true,
+            'name' => 'expiry',
+        ];
+
+        $this->assertEquals(
+            $expectedConditions,
+            $page->getEmbargoExpiryNoticeFieldConditions(),
+            '', // default value
+            0.0, // default value
+            10, // default value
+            true // sort both arrays so that the order of items doesn't matter
+        );
+    }
+
+    public function testExpiryMessageFuture(): void
+    {
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = $this->objFromFixture(SiteTree::class, 'expiry2');
+
+        $time = new DateTimeImmutable();
+
+        $expectedConditions = [];
+        $expectedConditions['expiry'] = [
+            'date' => sprintf('2014-01-08 12:00 %s', $time->getTimezone()->getName()),
+            'warning' => false,
+            'name' => 'expiry',
+        ];
+
+        $this->assertEquals(
+            $expectedConditions,
+            $page->getEmbargoExpiryNoticeFieldConditions(),
+            '', // default value
+            0.0, // default value
+            10, // default value
+            true // sort both arrays so that the order of items doesn't matter
+        );
     }
 }

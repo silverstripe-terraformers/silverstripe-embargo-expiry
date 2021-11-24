@@ -1,12 +1,10 @@
 SilverStripe\CMS\Model\SiteTree:
   home:
-    Title: Home Page
-    URLSegment: home
+    Title: Home
     PublishOnDate: 2014-01-07 12:00:00
     UnPublishOnDate: 2014-01-08 12:00:00
   contact:
-    Title: Home Page
-    URLSegment: home
+    Title: Contact us
     PublishOnDate: 2014-01-07 12:00:00
     UnPublishOnDate: 2014-01-08 12:00:00
 

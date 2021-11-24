@@ -2,10 +2,10 @@ SilverStripe\CMS\Model\SiteTree:
   home:
     Title: Home
     URLSegment: home
-  embargo1:
+  embargoEmpty:
     Title: Embargo1
     URLSegment: embargo1
-  expiry1:
+  expiryEmpty:
     Title: Expiry1
     URLSegment: expiry1
   idfields:
@@ -33,8 +33,8 @@ SilverStripe\CMS\Model\SiteTree:
     PublishOnDate: '2014-01-07 12:00:00'
     UnPublishOnDate: '2014-01-08 12:00:00'
   messages2:
-    Title: Messages Page 1
-    URLSegment: messages1
+    Title: Messages Page 2
+    URLSegment: messages2
     PublishOnDate: '2014-01-03 12:00:00'
     UnPublishOnDate: '2014-01-04 12:00:00'
   fields1:
@@ -57,3 +57,24 @@ SilverStripe\CMS\Model\SiteTree:
     URLSegment: validatepass
     DesiredPublishDate: '2014-01-08 12:00:00'
     UnPublishOnDate: '2014-01-07 12:00:00'
+  embargo1:
+    Title: Embargo1
+    PublishOnDate: 2014-01-03 12:00:00
+    UnPublishOnDate:
+  embargo2:
+    Title: Embargo2
+    PublishOnDate: 2014-01-08 12:00:00
+  expiry1:
+    Title: Expiry1
+    UnPublishOnDate: 2014-01-03 12:00:00
+  expiry2:
+    Title: Expiry2
+    UnPublishOnDate: 2014-01-08 12:00:00
+  both1:
+    Title: Both1
+    PublishOnDate: 2014-01-03 12:00:00
+    UnPublishOnDate: 2014-01-03 12:00:00
+  both2:
+    Title: Both2
+    PublishOnDate: 2014-01-08 12:00:00
+    UnPublishOnDate: 2014-01-08 12:00:00
