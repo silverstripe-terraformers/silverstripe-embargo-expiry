@@ -184,7 +184,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     {
         $service = $this->getService();
         /** @var SiteTree|EmbargoExpiryExtension $page */
-        $page = $this->objFromFixture(SiteTree::class, 'expiry1');
+        $page = $this->objFromFixture(SiteTree::class, 'expiryEmpty');
 
         // UnPublishDate is in the past, so it should be run immediately when we initialise it.
         $page->DesiredUnPublishDate = '2014-01-01 12:00:00';
@@ -313,7 +313,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->logInWithPermission('ADMIN');
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
-        $page = $this->objFromFixture(SiteTree::class, 'messages1');
+        $page = $this->objFromFixture(SiteTree::class, 'messages2');
         $fields = new FieldList();
 
         $page->addNoticeOrWarningFields($fields);
@@ -329,11 +329,11 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $time = new DateTimeImmutable();
 
         $expectedEmbargoMessage = sprintf(
-            'Embargo</strong>: 2014-01-07 12:00 %s<strong> (this date is in the',
+            'Embargo</strong>: 2014-01-03 12:00 %s<strong> (this date is in the',
             $time->getTimezone()->getName()
         );
         $expectedExpiryMessage = sprintf(
-            'Embargo</strong>: 2014-01-07 12:00 %s<strong> (this date is in the',
+            'Expiry</strong>: 2014-01-04 12:00 %s<strong> (this date is in the',
             $time->getTimezone()->getName()
         );
 
