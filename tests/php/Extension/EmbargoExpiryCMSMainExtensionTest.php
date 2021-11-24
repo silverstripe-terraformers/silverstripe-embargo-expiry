@@ -81,6 +81,7 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
         );
 
         // Refetch object from DB.
+        /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = SiteTree::get()->byID($id);
 
         $this->assertFalse($page->getIsPublishScheduled());

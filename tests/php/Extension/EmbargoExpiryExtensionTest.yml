@@ -57,3 +57,24 @@ SilverStripe\CMS\Model\SiteTree:
     URLSegment: validatepass
     DesiredPublishDate: '2014-01-08 12:00:00'
     UnPublishOnDate: '2014-01-07 12:00:00'
+  embargo1:
+    Title: Embargo1
+    PublishOnDate: 2014-01-03 12:00:00
+    UnPublishOnDate:
+  embargo2:
+    Title: Embargo2
+    PublishOnDate: 2014-01-08 12:00:00
+  expiry1:
+    Title: Expiry1
+    UnPublishOnDate: 2014-01-03 12:00:00
+  expiry2:
+    Title: Expiry2
+    UnPublishOnDate: 2014-01-08 12:00:00
+  both1:
+    Title: Both1
+    PublishOnDate: 2014-01-03 12:00:00
+    UnPublishOnDate: 2014-01-03 12:00:00
+  both2:
+    Title: Both2
+    PublishOnDate: 2014-01-08 12:00:00
+    UnPublishOnDate: 2014-01-08 12:00:00

@@ -22,6 +22,7 @@ use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
+use DateTimeImmutable;
 
 /**
  * Class WorkflowEmbargoExpiryExtension
@@ -120,8 +121,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             return $validationResult;
         }
 
-        $publishTime = new \DateTimeImmutable($this->owner->DesiredPublishDate);
-        $unpublishTime = new \DateTimeImmutable($unPublishDate);
+        $publishTime = new DateTimeImmutable($this->owner->DesiredPublishDate);
+        $unpublishTime = new DateTimeImmutable($unPublishDate);
         if ($publishTime > $unpublishTime) {
             $validationResult->addFieldError(
                 'DesiredPublishDate',
@@ -884,7 +885,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             $message .= sprintf(
                 '<br /><strong>%s</strong>: %s%s',
                 ucfirst($name),
-                $data['date']->format('Y-m-d H:i T'),
+                $data['date'],
                 $warning
             );
         }
@@ -903,24 +904,24 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function getEmbargoExpiryNoticeFieldConditions(): array
     {
         $conditions = [];
-        $now = new \DateTimeImmutable();
+        $now = DBDatetime::now()->getTimestamp();
 
-        if ($this->getIsPublishScheduled()) {
-            $time = new \DateTimeImmutable($this->owner->PublishOnDate);
+        if ($this->getPublishOnDateAsTimestamp()) {
+            $time = new DateTimeImmutable($this->owner->PublishOnDate);
 
             $conditions['embargo'] = [
-                'date' => $time,
-                'warning' => ($time < $now),
+                'date' => $time->format('Y-m-d H:i T'),
+                'warning' => ($time->getTimestamp() < $now),
                 'name' => _t(__CLASS__ . '.EMBARGO_NAME', 'embargo'),
             ];
         }
 
-        if ($this->getIsUnPublishScheduled()) {
-            $time = new \DateTimeImmutable($this->owner->UnPublishOnDate);
+        if ($this->getUnPublishOnDateAsTimestamp()) {
+            $time = new DateTimeImmutable($this->owner->UnPublishOnDate);
 
             $conditions['expiry'] = [
-                'date' => $time,
-                'warning' => ($time < $now),
+                'date' => $time->format('Y-m-d H:i T'),
+                'warning' => ($time->getTimestamp() < $now),
                 'name' => _t(__CLASS__ . '.EXPIRY_NAME', 'expiry'),
             ];
         }
