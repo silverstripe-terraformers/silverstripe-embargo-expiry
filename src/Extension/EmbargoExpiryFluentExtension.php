@@ -4,7 +4,7 @@ namespace Terraformers\EmbargoExpiry\Extension;
 
 use Exception;
 use SilverStripe\ORM\DataExtension;
-use SuperClosure\SerializableClosure;
+use Opis\Closure\SerializableClosure;
 use TractorCow\Fluent\State\FluentState;
 
 /**
