@@ -4,7 +4,7 @@ namespace Terraformers\EmbargoExpiry\Job;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
-use SuperClosure\SerializableClosure;
+use Opis\Closure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
