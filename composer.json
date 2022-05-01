@@ -19,7 +19,7 @@
     "issues": "https://github.com/silverstripe-terraformers/embargo-expiry/issues"
   },
   "require": {
-    "php": "^7.1 || ^8.0",
+    "php": "^7.4 || ^8.0",
     "silverstripe/vendor-plugin": "^1.0",
     "silverstripe/framework": "^4@dev",
     "silverstripe/cms": "^4@dev",
@@ -27,8 +27,8 @@
     "opis/closure": "^3.6"
   },
   "require-dev": {
-    "phpunit/phpunit": "^5.7",
-    "tractorcow/silverstripe-fluent": "^4.2.0"
+    "phpunit/phpunit": "^9.5",
+    "tractorcow/silverstripe-fluent": "^6.0"
   },
   "extra": {
     "expose": [
