@@ -2,12 +2,13 @@
 
 namespace Terraformers\EmbargoExpiry\Tests\Extension;
 
+use DateTimeImmutable;
 use Exception;
+use Page;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\FieldType\DBDatetime;
@@ -16,7 +17,6 @@ use SilverStripe\ORM\ValidationResult;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
-use DateTimeImmutable;
 
 /**
  * Class EmbargoExpiryExtensionTest
@@ -239,9 +239,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
         $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
 
-        $this->assertNotContains('cannot currently be edited', $content);
-        $this->assertContains($expectedEmbargoMessage, $content);
-        $this->assertContains($expectedExpiryMessage, $content);
+        $this->assertStringNotContainsString('cannot currently be edited', $content);
+        $this->assertStringContainsString($expectedEmbargoMessage, $content);
+        $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsCannotEditGuest(): void
@@ -269,10 +269,10 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
         $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $time->getTimezone()->getName());
 
-        $this->assertContains('cannot currently be edited', $content);
-        $this->assertContains('An administrator will need', $content);
-        $this->assertContains($expectedEmbargoMessage, $content);
-        $this->assertContains($expectedExpiryMessage, $content);
+        $this->assertStringContainsString('cannot currently be edited', $content);
+        $this->assertStringContainsString('An administrator will need', $content);
+        $this->assertStringContainsString($expectedEmbargoMessage, $content);
+        $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsCannotEditAdmin(): void
@@ -300,10 +300,10 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $expectedEmbargoMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $now->getTimezone()->getName());
         $expectedExpiryMessage = sprintf('Embargo</strong>: 2014-01-07 12:00 %s', $now->getTimezone()->getName());
 
-        $this->assertContains('cannot currently be edited', $content);
-        $this->assertContains('You will need to remove', $content);
-        $this->assertContains($expectedEmbargoMessage, $content);
-        $this->assertContains($expectedExpiryMessage, $content);
+        $this->assertStringContainsString('cannot currently be edited', $content);
+        $this->assertStringContainsString('You will need to remove', $content);
+        $this->assertStringContainsString($expectedEmbargoMessage, $content);
+        $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
     public function testMessageConditionsWarning(): void
@@ -338,8 +338,8 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         );
 
         // Test that the two warning messages were added.
-        $this->assertContains($expectedEmbargoMessage, $content);
-        $this->assertContains($expectedExpiryMessage, $content);
+        $this->assertStringContainsString($expectedEmbargoMessage, $content);
+        $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
     public function testEmbargoExpiryFieldNoticeMessageNotEditable(): void
@@ -364,7 +364,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $message = $page->getEmbargoExpiryFieldNoticeMessage();
 
         $this->assertNotNull($message);
-        $this->assertContains('Enter a date and/or time', $message);
+        $this->assertStringContainsString('Enter a date and/or time', $message);
     }
 
     public function testEmbargoExpiryFieldNoticeMessageWithoutPermission(): void
@@ -379,7 +379,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $message = $page->getEmbargoExpiryFieldNoticeMessage();
 
         $this->assertNotNull($message);
-        $this->assertContains('Please contact an administrator', $message);
+        $this->assertStringContainsString('Please contact an administrator', $message);
     }
 
     public function testAddDesiredDateFieldsWithoutPermission(): void
