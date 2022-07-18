@@ -2,6 +2,7 @@
 
 namespace Terraformers\EmbargoExpiry\Extension;
 
+use Exception;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
@@ -124,8 +125,19 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
             throw new AccessDeniedException('You do not have permission to remove embargo and expiry dates.');
         }
 
-        // Writing the record with no embargo set will automatically remove the queued jobs.
-        $record->{$dateField} = null;
+        // Clear the appropriate Job and field
+        switch ($dateField) {
+            case 'PublishOnDate':
+                $record->clearPublishJob();
+
+                break;
+            case 'UnPublishOnDate':
+                $record->clearUnPublishJob();
+
+                break;
+            default:
+                throw new Exception('Invalid action submitted');
+        }
 
         $record->write();
     }

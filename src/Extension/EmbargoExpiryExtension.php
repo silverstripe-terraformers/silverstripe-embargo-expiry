@@ -2,6 +2,7 @@
 
 namespace Terraformers\EmbargoExpiry\Extension;
 
+use DateTimeImmutable;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldList;
@@ -22,7 +23,6 @@ use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
-use DateTimeImmutable;
 
 /**
  * Class WorkflowEmbargoExpiryExtension
@@ -202,7 +202,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // Jobs can only be queued for records that already exist
-        if (!$this->owner->ID) {
+        if (!$this->owner->isInDB()) {
+            return;
+        }
+
+        // We allow other extensions/modules to prevent Jobs from being queued (only temporarily though, we hope). EG:
+        // The Advanced Workflow module will prevent Jobs being queued during write() operations if a Workflow is set,
+        // and will later allow them during an approval step
+        $extensionResults = $this->owner->invokeWithExtensions('preventEmbargoExpiryQueueJobs');
+
+        if (in_array(true, $extensionResults)) {
             return;
         }
 
@@ -496,6 +505,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         // You might have some additional requirements for allowing a PublishJob to be created.
         /** @var array|bool[] $canHavePublishJob */
         $canHavePublishJob = $this->owner->invokeWithExtensions('publishJobCanBeQueued');
+
         // One or more extensions said that this Object cannot have a PublishJob.
         if (in_array(false, $canHavePublishJob)) {
             return false;
