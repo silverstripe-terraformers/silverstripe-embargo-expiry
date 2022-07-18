@@ -20,17 +20,11 @@ use Terraformers\EmbargoExpiry\Form\EmbargoExpiryFormAction;
 /**
  * Experimental: This does not yet have test coverage. I suggest you write your own for now.
  *
- * Class EmbargoExpiryGridFieldItemRequestExtension
- *
- * @package Terraformers\EmbargoExpiry\Extension
  * @property VersionedGridFieldItemRequest $owner
  */
 class EmbargoExpiryGridFieldItemRequestExtension extends Extension
 {
-    /**
-     * @param FieldList $actions
-     * @return FieldList
-     */
+
     public function updateFormActions(FieldList $actions): FieldList
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
@@ -49,14 +43,14 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
         if ($record->getIsPublishScheduled()) {
             $actions->push(EmbargoExpiryFormAction::create(
                 'removeEmbargoAction',
-                _t(__CLASS__ . '.REMOVE_EMBARGO', 'Remove embargo')
+                _t(self::class . '.REMOVE_EMBARGO', 'Remove embargo')
             ));
         }
 
         if ($record->getIsUnPublishScheduled()) {
             $actions->push(EmbargoExpiryFormAction::create(
                 'removeExpiryAction',
-                _t(__CLASS__ . '.REMOVE_EXPIRY', 'Remove expiry')
+                _t(self::class . '.REMOVE_EXPIRY', 'Remove expiry')
             ));
         }
 
@@ -67,17 +61,16 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * This action will remove any/all embargo related dates from a record as well as their related queued jobs for
      * publishing and/or unpublishing.
      *
-     * @param array $data
-     * @param Form $form
      * @return HTTPResponse|ViewableData_Customised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
+     * @throws Exception
      */
     public function removeEmbargoAction(array $data, Form $form)
     {
         $this->removeEmbargoOrExpiry('PublishOnDate');
 
-        $message = _t(__CLASS__ . '.RemovedEmbargoAction', 'Successfully removed scheduled expiry date');
+        $message = _t(self::class . '.RemovedEmbargoAction', 'Successfully removed scheduled expiry date');
         $form->sessionMessage($message, 'notice');
 
         $controller = Controller::curr();
@@ -89,17 +82,16 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * This action will remove any/all embargo related dates from a record as well as theirelated queued jobs for
      * publishing and/or unpublishing.
      *
-     * @param array $data
-     * @param Form $form
      * @return HTTPResponse|ViewableData_Customised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
+     * @throws Exception
      */
     public function removeExpiryAction(array $data, Form $form)
     {
         $this->removeEmbargoOrExpiry('UnPublishOnDate');
 
-        $message = _t(__CLASS__ . '.RemovedExpiryAction', 'Successfully removed scheduled expiry date');
+        $message = _t(self::class . '.RemovedExpiryAction', 'Successfully removed scheduled expiry date');
         $form->sessionMessage($message, 'notice');
 
         $controller = Controller::curr();
@@ -108,9 +100,9 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
     }
 
     /**
-     * @param string $dateField
      * @throws HTTPResponse_Exception
      * @throws ValidationException
+     * @throws Exception
      */
     public function removeEmbargoOrExpiry(string $dateField): void
     {
@@ -118,7 +110,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
         $record = $this->owner->getRecord();
 
         if ($record === null || !$record->exists()) {
-            throw new HTTPResponse_Exception("Bad record", 404);
+            throw new HTTPResponse_Exception('Bad record', 404);
         }
 
         if (!$record->checkRemovePermission()) {
@@ -131,14 +123,17 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
                 $record->clearPublishJob();
 
                 break;
+
             case 'UnPublishOnDate':
                 $record->clearUnPublishJob();
 
                 break;
+
             default:
                 throw new Exception('Invalid action submitted');
         }
 
         $record->write();
     }
+
 }

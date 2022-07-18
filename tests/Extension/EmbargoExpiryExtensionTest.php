@@ -4,7 +4,6 @@ namespace Terraformers\EmbargoExpiry\Tests\Extension;
 
 use DateTimeImmutable;
 use Exception;
-use Page;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
@@ -18,19 +17,16 @@ use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
 
-/**
- * Class EmbargoExpiryExtensionTest
- *
- * @package Terraformers\EmbargoExpiry\Tests\Extension
- */
 class EmbargoExpiryExtensionTest extends SapphireTest
 {
+
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryExtensionTest.yml';
+    protected static $fixture_file = 'EmbargoExpiryExtensionTest.yml'; // phpcs:ignore
 
     /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
      */
     protected static $required_extensions = [
@@ -55,12 +51,10 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     protected function tearDown(): void
     {
         DBDatetime::clear_mock_now();
+
         parent::tearDown();
     }
 
-    /**
-     * @return TestQueuedJobService
-     */
     protected function getService(): TestQueuedJobService
     {
         return singleton(TestQueuedJobService::class);
@@ -533,14 +527,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
             'name' => 'embargo',
         ];
 
-        $this->assertEquals(
-            $expectedConditions,
-            $page->getEmbargoExpiryNoticeFieldConditions(),
-            '', // default value
-            0.0, // default value
-            10, // default value
-            true // sort both arrays so that the order of items doesn't matter
-        );
+        $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
     public function testEmbargoMessageFuture(): void
@@ -557,14 +544,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
             'name' => 'embargo',
         ];
 
-        $this->assertEquals(
-            $expectedConditions,
-            $page->getEmbargoExpiryNoticeFieldConditions(),
-            '', // default value
-            0.0, // default value
-            10, // default value
-            true // sort both arrays so that the order of items doesn't matter
-        );
+        $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
     public function testExpiryMessagePassed(): void
@@ -581,14 +561,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
             'name' => 'expiry',
         ];
 
-        $this->assertEquals(
-            $expectedConditions,
-            $page->getEmbargoExpiryNoticeFieldConditions(),
-            '', // default value
-            0.0, // default value
-            10, // default value
-            true // sort both arrays so that the order of items doesn't matter
-        );
+        $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
     public function testExpiryMessageFuture(): void
@@ -605,13 +578,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
             'name' => 'expiry',
         ];
 
-        $this->assertEquals(
-            $expectedConditions,
-            $page->getEmbargoExpiryNoticeFieldConditions(),
-            '', // default value
-            0.0, // default value
-            10, // default value
-            true // sort both arrays so that the order of items doesn't matter
-        );
+        $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
+
 }

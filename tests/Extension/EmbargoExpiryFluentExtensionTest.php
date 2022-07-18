@@ -7,7 +7,6 @@ use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\ValidationException;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryFluentExtension;
@@ -16,22 +15,19 @@ use TractorCow\Fluent\Extension\FluentSiteTreeExtension;
 use TractorCow\Fluent\Model\Locale;
 use TractorCow\Fluent\State\FluentState;
 
-/**
- * Class EmbargoExpiryFluentExtensionTest
- *
- * @package Terraformers\EmbargoExpiry\Tests\Extension
- */
 class EmbargoExpiryFluentExtensionTest extends SapphireTest
 {
-    const LOCALE_INT = 'en_NZ';
-    const LOCALE_JP = 'ja_JP';
+
+    private const LOCALE_INT = 'en_NZ';
+    private const LOCALE_JP = 'ja_JP';
 
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryFluentExtensionTest.yml';
+    protected static $fixture_file = 'EmbargoExpiryFluentExtensionTest.yml'; // phpcs:ignore
 
     /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
      */
     protected static $required_extensions = [
@@ -43,6 +39,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
     ];
 
     /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
      */
     protected static $extra_dataobjects = [
@@ -65,6 +62,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
     protected function tearDown(): void
     {
         DBDatetime::clear_mock_now();
+
         parent::tearDown();
     }
 
@@ -241,4 +239,5 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
             $this->assertTrue($page->isPublishedInLocale());
         });
     }
+
 }

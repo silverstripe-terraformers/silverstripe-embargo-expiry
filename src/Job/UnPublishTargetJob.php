@@ -2,32 +2,23 @@
 
 namespace Terraformers\EmbargoExpiry\Job;
 
-use SilverStripe\CMS\Model\SiteTree;
+use Opis\Closure\SerializableClosure;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
-use Opis\Closure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 /**
- * Class WorkflowPublishTargetJob
- *
- * @package Terraformers\EmbargoExpiry\Jobs
  * @property array|null $options
  */
 class UnPublishTargetJob extends AbstractQueuedJob
 {
+
     /**
      * @var DataObject
      */
-    private $target;
+    private $target; // phpcs:ignore SlevomatCodingStandard.TypeHints
 
-    /**
-     * WorkflowPublishTargetJob constructor.
-     *
-     * @param DataObject|Versioned|EmbargoExpiryExtension|null $obj
-     * @param array $options
-     */
     public function __construct(?DataObject $obj = null, ?array $options = null)
     {
         $this->totalSteps = 1;
@@ -46,17 +37,19 @@ class UnPublishTargetJob extends AbstractQueuedJob
      */
     public function getTarget()
     {
-        if ($this->target === null) {
-            if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
-                $superClosure = $this->options['onBeforeGetObject'];
-
-                if ($superClosure instanceof SerializableClosure) {
-                    $superClosure->__invoke();
-                }
-            }
-
-            $this->target = parent::getObject();
+        if ($this->target !== null) {
+            return $this->target;
         }
+
+        if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
+            $superClosure = $this->options['onBeforeGetObject'];
+
+            if ($superClosure instanceof SerializableClosure) {
+                $superClosure->__invoke();
+            }
+        }
+
+        $this->target = parent::getObject();
 
         return $this->target;
     }
@@ -64,21 +57,21 @@ class UnPublishTargetJob extends AbstractQueuedJob
     /**
      * @return string
      */
-    public function getTitle()
+    public function getTitle() // phpcs:ignore SlevomatCodingStandard.TypeHints
     {
         $target = $this->getTarget();
 
         return _t(
-            __CLASS__ . '.SCHEDULEUNPUBLISHJOBTITLE',
-            "Scheduled un-publishing of {object}",
-            "",
+            self::class . '.SCHEDULEUNPUBLISHJOBTITLE',
+            'Scheduled un-publishing of {object}',
+            '',
             [
                 'object' => $target->Title,
             ]
         );
     }
 
-    public function process()
+    public function process() // phpcs:ignore SlevomatCodingStandard.TypeHints
     {
         $target = $this->getTarget();
 
@@ -102,9 +95,10 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $this->completeJob();
     }
 
-    protected function completeJob()
+    protected function completeJob() // phpcs:ignore SlevomatCodingStandard.TypeHints
     {
         $this->currentStep = 1;
         $this->isComplete = true;
     }
+
 }

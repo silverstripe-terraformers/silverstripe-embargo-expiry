@@ -2,31 +2,23 @@
 
 namespace Terraformers\EmbargoExpiry\Job;
 
+use Opis\Closure\SerializableClosure;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
-use Opis\Closure\SerializableClosure;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 /**
- * Class WorkflowPublishTargetJob
- *
- * @package Terraformers\EmbargoExpiry\Jobs
  * @property array $options
  */
 class PublishTargetJob extends AbstractQueuedJob
 {
+
     /**
      * @var DataObject
      */
-    private $target;
+    private $target; // phpcs:ignore SlevomatCodingStandard.TypeHints
 
-    /**
-     * WorkflowPublishTargetJob constructor.
-     *
-     * @param DataObject|Versioned|EmbargoExpiryExtension|null $obj
-     * @param array $options
-     */
     public function __construct(?DataObject $obj = null, ?array $options = null)
     {
         $this->totalSteps = 1;
@@ -45,32 +37,31 @@ class PublishTargetJob extends AbstractQueuedJob
      */
     public function getTarget(): ?DataObject
     {
-        if ($this->target === null) {
-            if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
-                $superClosure = $this->options['onBeforeGetObject'];
-
-                if ($superClosure instanceof SerializableClosure) {
-                    $superClosure->__invoke();
-                }
-            }
-
-            $this->target = parent::getObject();
+        if ($this->target !== null) {
+            return $this->target;
         }
+
+        if (is_array($this->options) && array_key_exists('onBeforeGetObject', $this->options)) {
+            $superClosure = $this->options['onBeforeGetObject'];
+
+            if ($superClosure instanceof SerializableClosure) {
+                $superClosure->__invoke();
+            }
+        }
+
+        $this->target = parent::getObject();
 
         return $this->target;
     }
 
-    /**
-     * @return string
-     */
     public function getTitle(): string
     {
         $target = $this->getTarget();
 
         return _t(
-            __CLASS__ . '.SCHEDULEPUBLISHJOBTITLE',
-            "Scheduled publishing of {object}",
-            "",
+            self::class . '.SCHEDULEPUBLISHJOBTITLE',
+            'Scheduled publishing of {object}',
+            '',
             [
                 'object' => $target->Title,
             ]
@@ -106,4 +97,5 @@ class PublishTargetJob extends AbstractQueuedJob
         $this->currentStep = 1;
         $this->isComplete = true;
     }
+
 }
