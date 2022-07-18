@@ -14,19 +14,16 @@ use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryCMSMainExtension;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
-/**
- * Class EmbargoExpiryCMSMainExtensionTest
- *
- * @package Terraformers\EmbargoExpiry\Tests\Extension
- */
 class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 {
+
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryCMSMainExtensionTest.yml';
+    protected static $fixture_file = 'EmbargoExpiryCMSMainExtensionTest.yml'; // phpcs:ignore
 
     /**
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
      */
     protected static $required_extensions = [
@@ -54,6 +51,7 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
     protected function tearDown(): void
     {
         DBDatetime::clear_mock_now();
+
         parent::tearDown();
     }
 
@@ -160,4 +158,5 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
             ]
         );
     }
+
 }
