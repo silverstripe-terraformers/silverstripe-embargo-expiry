@@ -34,6 +34,8 @@
         <!-- Class length does not equal complexity. We absolutely don't care about class length -->
         <exclude name="SlevomatCodingStandard.Classes.ClassLength.ClassTooLong"/>
         <exclude name="SlevomatCodingStandard.Files.FileLength.FileTooLong"/>
+        <!-- We'll be the ones to decide "complexity", not PHPCS -->
+        <exclude name="SlevomatCodingStandard.Complexity.Cognitive.ComplexityTooHigh"/>
         <!-- Don't force the use of early exit. We do try to use it though, and you might get PR feedback where -->
         <!-- early exit is appropriate -->
         <exclude name="SlevomatCodingStandard.ControlStructures.EarlyExit.EarlyExitNotUsed"/>

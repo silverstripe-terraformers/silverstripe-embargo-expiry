@@ -525,6 +525,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if ($job !== null
             && $job->exists()
             && DBDatetime::create()->setValue($job->StartAfter)->getTimestamp() === $desiredPublishTime
+            // This check is (mostly) to support migrations from Workflow to E&E. If we previously had a Workflow job,
+            // we would want to clear and update this to an E&E job
+            && $job->Implementation === PublishTargetJob::class
         ) {
             // Make sure our PublishOnDate is up to date.
             $this->updatePublishOnDate();
@@ -579,6 +582,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if ($job !== null
             && $job->exists()
             && DBDatetime::create()->setValue($job->StartAfter)->getTimestamp() === $desiredUnPublishTime
+            // This check is (mostly) to support migrations from Workflow to E&E. If we previously had a Workflow job,
+            // we would want to clear and update this to an E&E job
+            && $job->Implementation === UnPublishTargetJob::class
         ) {
             // Make sure our UnPublishOnDate is up to date.
             $this->updateUnPublishOnDate();
