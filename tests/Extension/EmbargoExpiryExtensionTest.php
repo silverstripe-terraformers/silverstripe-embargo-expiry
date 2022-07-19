@@ -4,6 +4,7 @@ namespace Terraformers\EmbargoExpiry\Tests\Extension;
 
 use DateTimeImmutable;
 use Exception;
+use Page;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
@@ -141,6 +142,39 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $page->write();
 
         $this->assertFalse($page->isEditable());
+    }
+
+    public function testCreateOrUpdateJobMethods(): void
+    {
+        $embargo = '2014-02-05 12:00:00';
+        $expiry = '2014-02-07 12:00:00';
+
+        /** @var Page|EmbargoExpiryExtension $page */
+        $page = Page::create();
+        $page->Title = 'Test Page';
+        // This won't yet generate Jobs, as the Page first needs to exist
+        $page->write();
+        // Now we can set our dates
+        $page->DesiredPublishDate = $embargo;
+        $page->DesiredUnPublishDate = $expiry;
+        // This should generate Jobs for the two dates above
+        $page->write();
+
+        $this->assertNotNull($page->PublishJob());
+        $this->assertTrue($page->PublishJob()->exists());
+        $this->assertNotNull($page->UnPublishJob());
+        $this->assertTrue($page->UnPublishJob()->exists());
+
+        // Save away the Job IDs for comparison later
+        $publishJobId = $page->PublishJobID;
+        $unPublishJobId = $page->UnPublishJobID;
+
+        // This should NOT generate any new Jobs, they should remain exactly the same
+        $page->createOrUpdatePublishJob(strtotime($embargo));
+        $page->createOrUpdateUnPublishJob(strtotime($expiry));
+
+        $this->assertEquals($publishJobId, $page->PublishJobID);
+        $this->assertEquals($unPublishJobId, $page->UnPublishJobID);
     }
 
     /**
