@@ -80,13 +80,22 @@ class PublishTargetJob extends AbstractQueuedJob
 
         $target->setIsPublishJobRunning(true);
 
-        $target->invokeWithExtensions('prePublishTargetJob', $this->options);
+        // Make sure to use local variables for passing by reference as these are job properties
+        // which are manipulated via magic methods and these do not work with passing by reference directly
+        $options = $this->options;
+        $target->invokeWithExtensions('prePublishTargetJob', $options);
+        $this->options = $options;
+
         $target->unlinkPublishJobAndDate();
         $target->writeWithoutVersion();
         $target->publishRecursive();
 
+        // Make sure to use local variables for passing by reference as these are job properties
+        // which are manipulated via magic methods and these do not work with passing by reference directly
+        $options = $this->options;
         // This allows actions to occur after the publish job has run such as creating snapshots
-        $target->invokeWithExtensions('afterPublishTargetJob', $this->options);
+        $target->invokeWithExtensions('afterPublishTargetJob', $options);
+        $this->options = $options;
 
         $target->setIsPublishJobRunning(false);
         $this->completeJob();

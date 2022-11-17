@@ -71,7 +71,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
         );
     }
 
-    public function process() // phpcs:ignore SlevomatCodingStandard.TypeHints
+    public function process(): void
     {
         $target = $this->getTarget();
 
@@ -83,13 +83,22 @@ class UnPublishTargetJob extends AbstractQueuedJob
 
         $target->setIsUnPublishJobRunning(true);
 
-        $target->invokeWithExtensions('preUnPublishTargetJob', $this->options);
+        // Make sure to use local variables for passing by reference as these are job properties
+        // which are manipulated via magic methods and these do not work with passing by reference directly
+        $options = $this->options;
+        $target->invokeWithExtensions('preUnPublishTargetJob', $options);
+        $this->options = $options;
+
         $target->unlinkUnPublishJobAndDate();
         $target->writeWithoutVersion();
         $target->doUnpublish();
 
+        // Make sure to use local variables for passing by reference as these are job properties
+        // which are manipulated via magic methods and these do not work with passing by reference directly
+        $options = $this->options;
         // This allows actions to occur after the unpublish job has run such as creating snapshots
-        $target->invokeWithExtensions('afterUnPublishTargetJob', $this->options);
+        $target->invokeWithExtensions('afterUnPublishTargetJob', $options);
+        $this->options = $options;
 
         $target->setIsUnPublishJobRunning(false);
         $this->completeJob();
