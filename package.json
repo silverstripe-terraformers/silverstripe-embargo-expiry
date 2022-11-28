@@ -9,7 +9,7 @@
     "build": "NODE_ENV=production webpack -p --bail --progress",
     "watch": "NODE_ENV=development webpack --watch --progress",
     "css": "WEBPACK_CHILD=css npm run build",
-    "lint": "eslint client/src && sass-lint -v"
+    "lint": "eslint client/src"
   },
   "repository": {
     "type": "git",
