@@ -131,13 +131,13 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($this->getIsPublishScheduled()) {
             // Add action to remove embargo.
-            $action = new FormAction('removeEmbargoAction', _t(self::class . '.REMOVE_EMBARGO', 'Remove embargo'));
+            $action = FormAction::create('removeEmbargoAction', _t(self::class . '.REMOVE_EMBARGO', 'Remove embargo'));
             $actions->insertBefore('ActionMenus', $action);
         }
 
         if ($this->getIsUnPublishScheduled()) {
             // Add action to remove embargo.
-            $action = new FormAction('removeExpiryAction', _t(self::class . '.REMOVE_EXPIRY', 'Remove expiry'));
+            $action = FormAction::create('removeExpiryAction', _t(self::class . '.REMOVE_EXPIRY', 'Remove expiry'));
             $actions->insertBefore('ActionMenus', $action);
         }
     }
@@ -560,8 +560,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ? date('Y-m-d H:i:s', $desiredPublishTime)
             : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $job = new PublishTargetJob($this->owner, $options);
-        $this->owner->PublishJobID = Injector::inst()->get(QueuedJobService::class)
+        $job = Injector::inst()->create(PublishTargetJob::class, $this->owner, $options);
+        $this->owner->PublishJobID = QueuedJobService::singleton()
             ->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our PublishOnDate is up to date.
@@ -616,8 +616,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ? date('Y-m-d H:i:s', $desiredUnPublishTime)
             : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $job = new UnPublishTargetJob($this->owner, $options);
-        $this->owner->UnPublishJobID = Injector::inst()->get(QueuedJobService::class)
+        $job = Injector::inst()->create(UnPublishTargetJob::class, $this->owner, $options);
+        $this->owner->UnPublishJobID = QueuedJobService::singleton()
             ->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our UnPublishOnDate is up to date.
@@ -977,7 +977,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param string|null $desiredPublishTime
      */
-    private function updatePublishOnDate(?string $desiredPublishTime = null): void
+    protected function updatePublishOnDate(?string $desiredPublishTime = null): void
     {
         if ($desiredPublishTime === null) {
             $desiredPublishTime = $this->owner->DesiredPublishDate;
@@ -992,7 +992,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param string|null $desiredUnPublishTime
      */
-    private function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
+    protected function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
     {
         if ($desiredUnPublishTime === null) {
             $desiredUnPublishTime = $this->owner->DesiredUnPublishDate;
