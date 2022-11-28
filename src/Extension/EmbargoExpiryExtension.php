@@ -977,7 +977,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param string|null $desiredPublishTime
      */
-    protected function updatePublishOnDate(?string $desiredPublishTime = null): void
+    private function updatePublishOnDate(?string $desiredPublishTime = null): void
     {
         if ($desiredPublishTime === null) {
             $desiredPublishTime = $this->owner->DesiredPublishDate;
@@ -992,7 +992,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * @param string|null $desiredUnPublishTime
      */
-    protected function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
+    private function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
     {
         if ($desiredUnPublishTime === null) {
             $desiredUnPublishTime = $this->owner->DesiredUnPublishDate;
