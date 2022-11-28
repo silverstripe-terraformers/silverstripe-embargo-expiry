@@ -17,7 +17,6 @@ use TractorCow\Fluent\State\FluentState;
 
 class EmbargoExpiryFluentExtensionTest extends SapphireTest
 {
-
     private const LOCALE_INT = 'en_NZ';
     private const LOCALE_JP = 'ja_JP';
 
@@ -239,5 +238,4 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
             $this->assertTrue($page->isPublishedInLocale());
         });
     }
-
 }

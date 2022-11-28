@@ -16,7 +16,6 @@ use Symfony\Component\Finder\Exception\AccessDeniedException;
  */
 class EmbargoExpiryCMSMainExtension extends Extension
 {
-
     private static array $allowed_actions = [
         'removeEmbargoAction',
         'removeExpiryAction',
@@ -112,5 +111,4 @@ class EmbargoExpiryCMSMainExtension extends Extension
 
         $record->write();
     }
-
 }

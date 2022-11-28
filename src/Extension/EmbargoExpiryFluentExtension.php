@@ -9,7 +9,6 @@ use TractorCow\Fluent\State\FluentState;
 
 class EmbargoExpiryFluentExtension extends DataExtension
 {
-
     /**
      * Fluent specific configuration
      */
@@ -64,5 +63,4 @@ class EmbargoExpiryFluentExtension extends DataExtension
     {
         $this->setLocaleOptions($options);
     }
-
 }

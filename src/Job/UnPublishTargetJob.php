@@ -109,5 +109,4 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $this->currentStep = 1;
         $this->isComplete = true;
     }
-
 }

@@ -37,7 +37,6 @@ use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
  */
 class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 {
-
     public const PERMISSION_ADD = 'AddEmbargoExpiry';
     public const PERMISSION_REMOVE = 'RemoveEmbargoExpiry';
 
@@ -1053,5 +1052,4 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     {
         // You do not need to call parent::() when implementing this method, it is simply here to provide code hinting
     }
-
 }

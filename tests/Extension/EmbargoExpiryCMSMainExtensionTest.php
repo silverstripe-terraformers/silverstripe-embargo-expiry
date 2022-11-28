@@ -16,7 +16,6 @@ use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 {
-
     /**
      * @var string
      */
@@ -158,5 +157,4 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
             ]
         );
     }
-
 }
