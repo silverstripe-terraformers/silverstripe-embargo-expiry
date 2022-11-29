@@ -13,7 +13,6 @@ use Symbiote\QueuedJobs\Services\QueuedJobService;
  */
 class TestQueuedJobService extends QueuedJobService implements TestOnly
 {
-
     /**
      * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
@@ -30,5 +29,4 @@ class TestQueuedJobService extends QueuedJobService implements TestOnly
     {
         return $this->initialiseJob($descriptor);
     }
-
 }

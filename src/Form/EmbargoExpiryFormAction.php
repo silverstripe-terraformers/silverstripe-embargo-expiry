@@ -6,7 +6,6 @@ use SilverStripe\Forms\FormAction;
 
 class EmbargoExpiryFormAction extends FormAction
 {
-
     /**
      * We don't ever want to perform a readonly transformation on this action. If it has been made available to the use,
      * that means they're allowed to use it.
@@ -15,5 +14,4 @@ class EmbargoExpiryFormAction extends FormAction
     {
         return $this;
     }
-
 }

@@ -13,16 +13,6 @@ window.jQuery.entwine('ss', ($) => {
     versionedObjectSaveButton = $('button[name="action_doSave"]');
   };
 
-  const showHidePublishButtons = (hasEmbargo) => {
-    if (hasEmbargo) {
-      hidePublishButton();
-
-      return;
-    }
-
-    showPublishButton();
-  };
-
   const hidePublishButton = () => {
     if (siteTreePublishButton !== null) {
       siteTreePublishButton.detach();
@@ -41,6 +31,16 @@ window.jQuery.entwine('ss', ($) => {
     if (versionedObjectPublishButton !== null) {
       versionedObjectPublishButton.insertAfter(versionedObjectSaveButton);
     }
+  };
+
+  const showHidePublishButtons = (hasEmbargo) => {
+    if (hasEmbargo) {
+      hidePublishButton();
+
+      return;
+    }
+
+    showPublishButton();
   };
 
   $('input[name="DesiredPublishDate"]').entwine({

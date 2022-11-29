@@ -24,7 +24,6 @@ use Terraformers\EmbargoExpiry\Form\EmbargoExpiryFormAction;
  */
 class EmbargoExpiryGridFieldItemRequestExtension extends Extension
 {
-
     public function updateFormActions(FieldList $actions): FieldList
     {
         /** @var DataObject|EmbargoExpiryExtension $record */
@@ -135,5 +134,4 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
 
         $record->write();
     }
-
 }

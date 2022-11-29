@@ -20,7 +20,6 @@ use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
 
 class EmbargoExpiryExtensionTest extends SapphireTest
 {
-
     /**
      * @var string
      */
@@ -614,5 +613,4 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
-
 }
