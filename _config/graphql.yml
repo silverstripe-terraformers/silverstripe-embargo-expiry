@@ -1,0 +1,5 @@
+SilverStripe\GraphQL\Schema\Schema:
+  schemas:
+    admin:
+      src:
+        - 'terraformers/embargo-expiry: _graphql'

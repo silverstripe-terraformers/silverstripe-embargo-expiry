@@ -23,6 +23,7 @@ use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
+use Terraformers\EmbargoExpiry\Model\Action;
 
 /**
  * @property DataObject|$this $owner
@@ -53,6 +54,10 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     private static array $has_one = [
         'PublishJob' => QueuedJobDescriptor::class,
         'UnPublishJob' => QueuedJobDescriptor::class,
+    ];
+
+    private static array $has_many = [
+        'EmbargoExpiryActions' => Action::class,
     ];
 
     /**

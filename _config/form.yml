@@ -1,0 +1,6 @@
+---
+Name: embargoexpiryfield
+---
+SilverStripe\Admin\LeftAndMain:
+  extra_requirements_javascript:
+    - 'silverstripe-terraformers/embargo-expiry:client/dist/js/main.js'

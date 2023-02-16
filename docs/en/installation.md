@@ -11,7 +11,7 @@ Add the extension to the `DataObject` classes you want to have embargoed.
 ```yml
 SilverStripe\CMS\Model\SiteTree:
   extensions:
-    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension
+    - Terraformers\EmbargoExpiryField\Extension\EmbargoExpiryExtension
 ```
 
 If you are applying the extension fo a DataObject other than `SiteTree`, ensure it has the `Versioned` extension applied
@@ -21,7 +21,7 @@ so it can be published/unpublished.
 MyCustomDataObject:
   extensions:
     - SilverStripe\Versioned\Versioned
-    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension
+    - Terraformers\EmbargoExpiryField\Extension\EmbargoExpiryExtension
 ```
 
 Now run a `dev/build?flush=all` in your browser, or from the command line via `vendor/bin/sake dev/build flush=all`.

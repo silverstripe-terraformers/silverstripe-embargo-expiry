@@ -3,13 +3,12 @@
   "version": "1.0.0",
   "description": "Embargo & expiry module for SilverStrip CMS",
   "engines": {
-    "node": "^10.x"
+    "node": "^18"
   },
   "scripts": {
-    "build": "NODE_ENV=production webpack -p --bail --progress",
-    "watch": "NODE_ENV=development webpack --watch --progress",
-    "css": "WEBPACK_CHILD=css npm run build",
-    "lint": "eslint client/src"
+    "build": "NODE_ENV=production webpack --bail --progress",
+    "dev": "NODE_ENV=development webpack --progress",
+    "watch": "NODE_ENV=development webpack --watch --progress"
   },
   "repository": {
     "type": "git",
@@ -29,11 +28,25 @@
     "url": "https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry/issues"
   },
   "homepage": "https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry",
-  "devDependencies": {
-    "@silverstripe/eslint-config": "0.0.5",
-    "@silverstripe/webpack-config": "^0.11.0"
-  },
   "dependencies": {
-    "jquery": "^3.5.0"
+    "babel-polyfill": "6.7.4",
+    "react": "^16.13.1",
+    "react-apollo": "^3.1.5",
+    "react-client": "^1.0.1",
+    "react-datetime-picker": "^4.2.0",
+    "react-dom": "^16.13.1",
+    "reactstrap": "^8.5.1"
+  },
+  "devDependencies": {
+    "@silverstripe/webpack-config": "^2.0.0-alpha9",
+    "babel-jest": "^29.3.0",
+    "enzyme": "^3.3.0",
+    "enzyme-adapter-react-16": "^1.10.0"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env",
+      "@babel/preset-react"
+    ]
   }
 }
