@@ -2,9 +2,12 @@
 
 namespace Terraformers\EmbargoExpiry\Form;
 
+use Exception;
 use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldGroup;
 use SilverStripe\Forms\FormField;
+use SilverStripe\ORM\DataObject;
+use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 class EmbargoExpiryField extends FieldGroup
 {
@@ -36,18 +39,24 @@ class EmbargoExpiryField extends FieldGroup
 
     public function getState(): string
     {
+        /** @var DataObject|EmbargoExpiryExtension $record */
+        $record = $this->getForm()->getRecord();
+
+        if (!$record->hasExtension(EmbargoExpiryExtension::class)) {
+            throw new Exception(sprintf(
+                'Class "%s" does not have "%s" applied',
+                $record->ClassName,
+                EmbargoExpiryExtension::class
+            ));
+        }
+
         return json_encode([
-            'RecordID' => $this->getForm()->getRecord()->ID,
-            'RecordClass' => $this->getForm()->getRecord()->ClassName,
+            'recordId' => $record->ID,
+            'recordClass' => $record->ClassName,
+            'desiredPublishDate' => $record->DesiredPublishDate,
+            'desiredUnPublishDate' => $record->DesiredUnPublishDate,
+            'publishOnDate' => $record->PublishOnDate,
+            'unPublishOnDate' => $record->UnPublishOnDate,
         ]);
-    }
-
-    public function getSchemaStateDefaults()
-    {
-        $state = parent::getSchemaStateDefaults();
-        $state['desiredPublishDate'] = $this->desiredPublishDate->getSchemaState();
-        $state['desiredUnPublishDate'] = $this->desiredUnPublishDate->getSchemaState();
-
-        return $state;
     }
 }

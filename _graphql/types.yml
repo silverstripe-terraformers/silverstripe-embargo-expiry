@@ -1,0 +1,4 @@
+EmbargoExpiryResponse:
+  fields:
+    publishOnDate: String
+    unPublishOnDate: String

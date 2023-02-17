@@ -1,0 +1,3 @@
+'submitEmbargoExpiryForm(recordId: Int!, recordClass: String!, desiredPublishDate: String, desiredUnPublishDate: String)':
+  type: EmbargoExpiryResponse
+  resolver: ['Terraformers\EmbargoExpiry\GraphQL\EmbargoExpiryFormMutation', 'submitEmbargoExpiryForm']
