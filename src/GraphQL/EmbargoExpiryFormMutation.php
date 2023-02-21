@@ -6,7 +6,7 @@ use DateTime;
 use GraphQL\Type\Definition\ResolveInfo;
 use SilverStripe\ORM\DataObject;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
-use Terraformers\EmbargoExpiry\Model\Action;
+use Terraformers\EmbargoExpiry\Model\ScheduledAction;
 
 class EmbargoExpiryFormMutation
 {
@@ -58,18 +58,18 @@ class EmbargoExpiryFormMutation
      *
      * @param DataObject|EmbargoExpiryExtension $dataObject
      */
-    private static function findOrCreateEmbargoAction(DataObject $dataObject): ?Action
+    private static function findOrCreateEmbargoAction(DataObject $dataObject): ?ScheduledAction
     {
-        $embargoAction = $dataObject->EmbargoExpiryActions()
-            ->filter('Type', Action::ACTION_EMBARGO)
+        $embargoAction = $dataObject->ScheduledActions()
+            ->filter('Type', ScheduledAction::TYPE_EMBARGO)
             ->first();
 
         if ($embargoAction?->exists()) {
             return $embargoAction;
         }
 
-        $embargoAction = Action::create();
-        $embargoAction->Type = Action::ACTION_EMBARGO;
+        $embargoAction = ScheduledAction::create();
+        $embargoAction->Type = ScheduledAction::TYPE_EMBARGO;
         $embargoAction->RecordClass = $dataObject->ClassName;
         $embargoAction->RecordID = $dataObject->ID;
         $embargoAction->write();
@@ -83,18 +83,18 @@ class EmbargoExpiryFormMutation
      *
      * @param DataObject|EmbargoExpiryExtension $dataObject
      */
-    private static function findOrCreateExpiryAction(DataObject $dataObject): ?Action
+    private static function findOrCreateExpiryAction(DataObject $dataObject): ?ScheduledAction
     {
-        $embargoAction = $dataObject->EmbargoExpiryActions()
-            ->filter('Type', Action::ACTION_EXPIRY)
+        $embargoAction = $dataObject->ScheduledActions()
+            ->filter('Type', ScheduledAction::TYPE_EXPIRY)
             ->first();
 
         if ($embargoAction?->exists()) {
             return $embargoAction;
         }
 
-        $embargoAction = Action::create();
-        $embargoAction->Type = Action::ACTION_EXPIRY;
+        $embargoAction = ScheduledAction::create();
+        $embargoAction->Type = ScheduledAction::TYPE_EXPIRY;
         $embargoAction->RecordClass = $dataObject->ClassName;
         $embargoAction->RecordID = $dataObject->ID;
         $embargoAction->write();

@@ -3,10 +3,13 @@
 namespace Terraformers\EmbargoExpiry\Job;
 
 use Opis\Closure\SerializableClosure;
+use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
+use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
+use Terraformers\EmbargoExpiry\Model\ScheduledAction;
 
 /**
  * @property array|null $options
@@ -21,6 +24,8 @@ class UnPublishTargetJob extends AbstractQueuedJob
 
     public function __construct(?DataObject $obj = null, ?array $options = null)
     {
+        parent::__construct();
+
         $this->totalSteps = 1;
 
         if ($obj !== null) {
@@ -81,7 +86,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
             return;
         }
 
-        $target->setIsUnPublishJobRunning(true);
+        ActionProcessingState::singleton()->setActionIsProcessing(true);
 
         // Make sure to use local variables for passing by reference as these are job properties
         // which are manipulated via magic methods and these do not work with passing by reference directly
@@ -89,18 +94,24 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $target->invokeWithExtensions('preUnPublishTargetJob', $options);
         $this->options = $options;
 
-        $target->unlinkUnPublishJobAndDate();
-        $target->writeWithoutVersion();
         $target->doUnpublish();
+
+        /** @var DataList|ScheduledAction[] $scheduleActions */
+        $scheduleActions = $target->ScheduledActions()->filter('Type', ScheduledAction::TYPE_EXPIRY);
+
+        foreach ($scheduleActions as $scheduleAction) {
+            $scheduleAction->delete();
+        }
 
         // Make sure to use local variables for passing by reference as these are job properties
         // which are manipulated via magic methods and these do not work with passing by reference directly
         $options = $this->options;
-        // This allows actions to occur after the unpublish job has run such as creating snapshots
+        // This allows actions to occur after the unpublishing job has run such as creating snapshots
         $target->invokeWithExtensions('afterUnPublishTargetJob', $options);
         $this->options = $options;
 
-        $target->setIsUnPublishJobRunning(false);
+        ActionProcessingState::singleton()->setActionIsProcessing(false);
+
         $this->completeJob();
     }
 

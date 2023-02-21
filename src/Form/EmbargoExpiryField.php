@@ -2,11 +2,18 @@
 
 namespace Terraformers\EmbargoExpiry\Form;
 
+use DateTimeImmutable;
 use Exception;
 use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldGroup;
+use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\HeaderField;
+use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\ORM\FieldType\DBDatetime;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Permission;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 
 class EmbargoExpiryField extends FieldGroup
@@ -22,20 +29,6 @@ class EmbargoExpiryField extends FieldGroup
     private static array $default_classes = [
         'EmbargoExpiryField',
     ];
-
-    public function __construct(
-        string $name,
-        ?string $title = null,
-    ) {
-        $fields = [
-            $this->desiredPublishDate = DatetimeField::create('DesiredPublishDate'),
-            $this->desiredUnPublishDate = DatetimeField::create('DesiredUnPublishDate'),
-        ];
-
-        $this->addExtraClass('EmbargoExpiryField');
-
-        parent::__construct($title, $fields);
-    }
 
     public function getState(): string
     {
@@ -58,5 +51,23 @@ class EmbargoExpiryField extends FieldGroup
             'publishOnDate' => $record->PublishOnDate,
             'unPublishOnDate' => $record->UnPublishOnDate,
         ]);
+
+        // TODO need to forward the authors edit permissions, and appropriate enable disable editing of embargo/expiry
     }
+
+    private function datesAreSequential(int $desiredPublishTime, int $desiredUnPublishTime, int $unPublishTime): bool
+    {
+        // The desired publish date is set after the desired un-publish date, and you require sequential dates.
+        if ($desiredUnPublishTime && $desiredPublishTime > $desiredUnPublishTime) {
+            return false;
+        }
+
+        // The desired publish date is set after the active un-publish date, and you require sequential dates.
+        if ($unPublishTime && $desiredPublishTime > $unPublishTime) {
+            return false;
+        }
+
+        return true;
+    }
+
 }

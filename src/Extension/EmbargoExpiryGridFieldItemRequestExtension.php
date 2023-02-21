@@ -16,6 +16,7 @@ use SilverStripe\Versioned\VersionedGridFieldItemRequest;
 use SilverStripe\View\ViewableData_Customised;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Terraformers\EmbargoExpiry\Form\EmbargoExpiryFormAction;
+use Terraformers\EmbargoExpiry\Model\ScheduledAction;
 
 /**
  * Experimental: This does not yet have test coverage. I suggest you write your own for now.
@@ -35,7 +36,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
         }
 
         // Check that the user has permission to remove Embargo/Expiry for this Object. Exit early if they don't.
-        if (!$record->checkRemovePermission()) {
+        if (!ScheduledAction::checkRemovePermission()) {
             return $actions;
         }
 
@@ -112,7 +113,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
             throw new HTTPResponse_Exception('Bad record', 404);
         }
 
-        if (!$record->checkRemovePermission()) {
+        if (!ScheduledAction::checkRemovePermission()) {
             throw new AccessDeniedException('You do not have permission to remove embargo and expiry dates.');
         }
 
