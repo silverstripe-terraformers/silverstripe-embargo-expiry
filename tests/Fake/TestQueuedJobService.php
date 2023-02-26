@@ -25,7 +25,7 @@ class TestQueuedJobService extends QueuedJobService implements TestOnly
      * @return bool|QueuedJob
      * @throws Exception
      */
-    public function testInit(QueuedJobDescriptor $descriptor)
+    public function testInit(QueuedJobDescriptor $descriptor) // phpcs:ignore SlevomatCodingStandard.TypeHints
     {
         return $this->initialiseJob($descriptor);
     }

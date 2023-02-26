@@ -122,12 +122,10 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
                 $record->clearPublishJob();
 
                 break;
-
             case 'UnPublishOnDate':
                 $record->clearUnPublishJob();
 
                 break;
-
             default:
                 throw new Exception('Invalid action submitted');
         }
