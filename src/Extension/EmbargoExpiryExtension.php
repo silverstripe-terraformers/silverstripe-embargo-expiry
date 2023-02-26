@@ -22,6 +22,7 @@ use SilverStripe\View\Requirements;
 use Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Job\PublishTargetJob;
+use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
 
 /**
@@ -312,7 +313,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function clearPublishJob(): void
     {
         // Can't clear a job while it's in the process of being completed.
-        if ($this->owner->getIsPublishJobRunning()) {
+        if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
@@ -332,7 +333,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function clearUnPublishJob(): void
     {
         // Can't clear a job while it's in the process of being completed.
-        if ($this->owner->getIsUnPublishJobRunning()) {
+        if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
@@ -384,7 +385,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function ensurePublishJob(): void
     {
         // Can't clear a job while it's in the process of being completed.
-        if ($this->owner->getIsPublishJobRunning()) {
+        if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
@@ -417,7 +418,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function ensureUnPublishJob(): void
     {
         // Can't clear a job while it's in the process of being completed.
-        if ($this->owner->getIsUnPublishJobRunning()) {
+        if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
@@ -567,9 +568,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $this->updatePublishOnDate($updateTime);
     }
 
-    /**
-     * @param int $desiredUnPublishTime
-     */
     public function createOrUpdateUnPublishJob(int $desiredUnPublishTime): void
     {
         $now = DBDatetime::now()->getTimestamp();
@@ -625,8 +623,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     /**
      * Returns whether a publishing date has been set and is after the current date
-     *
-     * @return bool
      */
     public function getIsPublishScheduled(): bool
     {
@@ -646,8 +642,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     /**
      * Returns whether an unpublishing date has been set and is after the current date
-     *
-     * @return bool
      */
     public function getIsUnPublishScheduled(): bool
     {
@@ -662,24 +656,17 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     }
 
     /**
-     * Default logic for whether or not the DataObject is editable. Feel free to override this method on your DataObject
-     * if you need to change the logic.
-     *
-     * @return bool
+     * Default logic for whether the DataObject is editable. Feel free to override this method on your DataObject if
+     * you need to change the logic.
      */
     public function isEditable(): ?bool
     {
-        // Need to be able to save the DataObject if this is being called during PublishTargetJob.
-        if ($this->owner->getIsPublishJobRunning()) {
+        // Need to be able to save the DataObject if this is being called during either of our Jobs.
+        if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return true;
         }
 
-        // Need to be able to save the DataObject if this is being called during UnPublishTargetJob.
-        if ($this->owner->getIsUnPublishJobRunning()) {
-            return true;
-        }
-
-        // If the owner object allows embargoed editing, then return null so we can fall back to SiteTree behaviours
+        // If the owner object allows embargoed editing, then return null, so we can fall back to SiteTree behaviours
         // (SiteTree and inherited permissions)
         if ($this->owner->config()->get('allow_embargoed_editing')) {
             return null;
@@ -699,9 +686,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         return null;
     }
 
-    /**
-     * @param FieldList $fields
-     */
     public function addDesiredDateFields(FieldList $fields): void
     {
         $fields->findOrMakeTab(
@@ -751,9 +735,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $unPublishDateField->setReadonly(true);
     }
 
-    /**
-     * @param FieldList $fields
-     */
     public function addScheduledDateFields(FieldList $fields): void
     {
         if (!$this->getIsPublishScheduled() && !$this->getIsUnPublishScheduled()) {
@@ -811,9 +792,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         );
     }
 
-    /**
-     * @param FieldList $fields
-     */
     public function addNoticeOrWarningFields(FieldList $fields): void
     {
         $conditions = $this->getEmbargoExpiryNoticeFieldConditions();
@@ -853,9 +831,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         );
     }
 
-    /**
-     * @return array
-     */
     public function getEmbargoExpiryNoticeFieldConditions(): array
     {
         $conditions = [];
@@ -884,11 +859,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         return $conditions;
     }
 
-    /**
-     * @param array $conditions
-     * @return string
-     */
-    public function getEmbargoExpiryNoticeMessage(array $conditions): ?string
+    private function getEmbargoExpiryNoticeMessage(array $conditions): ?string
     {
         if (count($conditions) === 0) {
             return null;
@@ -937,45 +908,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         );
     }
 
-    /**
-     * Method to decide whether or not this Object is being accessed while a PublishTargetJob is running.
-     *
-     * @return bool
-     */
-    public function getIsPublishJobRunning(): bool
-    {
-        return $this->isPublishJobRunning;
-    }
-
-    /**
-     * @param bool $bool
-     */
-    public function setIsPublishJobRunning(bool $bool): void
-    {
-        $this->isPublishJobRunning = $bool;
-    }
-
-    /**
-     * Method to decide whether or not this Object is being accessed while a PublishTargetJob is running.
-     *
-     * @return bool
-     */
-    public function getIsUnPublishJobRunning(): bool
-    {
-        return $this->isUnPublishJobRunning;
-    }
-
-    /**
-     * @param $bool
-     */
-    public function setIsUnPublishJobRunning(bool $bool): void
-    {
-        $this->isUnPublishJobRunning = $bool;
-    }
-
-    /**
-     * @param string|null $desiredPublishTime
-     */
     private function updatePublishOnDate(?string $desiredPublishTime = null): void
     {
         if ($desiredPublishTime === null) {
@@ -988,9 +920,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         $this->owner->DesiredPublishDate = null;
     }
 
-    /**
-     * @param string|null $desiredUnPublishTime
-     */
     private function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
     {
         if ($desiredUnPublishTime === null) {
@@ -1009,8 +938,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      *
      * The purpose of this method is to allow you a chance to modify your DataObject in any way you may need to prior
      * to it being published. You have access to any $options that you set as part of the PublishTargetJob.
-     *
-     * @param array|null $options
      */
     public function prePublishTargetJob(?array $options): void
     {
@@ -1023,8 +950,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      *
      * The purpose of this method is to allow you a chance to modify your DataObject in any way you may need to prior
      * to it being unpublished. You have access to any $options that you set as part of the PublishTargetJob.
-     *
-     * @param array|null $options
      */
     public function preUnPublishTargetJob(?array $options): void
     {
@@ -1034,8 +959,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * A method that can be implemented on your DataObject. This method is run with invokeWithExtensions prior to
      * creation of the PublishTargetJob.
-     *
-     * @param array|null $options
      */
     public function updatePublishTargetJobOptions(?array &$options): void
     {
@@ -1045,8 +968,6 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * A method that can be implemented on your DataObject. This method is run with invokeWithExtensions prior to
      * creation of the PublishTargetJob.
-     *
-     * @param array|null $options
      */
     public function updateUnPublishTargetJobOptions(?array &$options): void
     {

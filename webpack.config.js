@@ -1,40 +1,24 @@
 const Path = require('path');
-const webpackConfig = require('@silverstripe/webpack-config');
-const {
-  resolveJS,
-  externalJS,
-  moduleJS,
-  pluginJS,
-} = webpackConfig;
+const webpack = require('webpack');
+const { JavascriptWebpackConfig, CssWebpackConfig } = require('@silverstripe/webpack-config');
 
-const ENV = process.env.NODE_ENV;
 const PATHS = {
-  MODULES: 'node_modules',
-  FILES_PATH: '../',
   ROOT: Path.resolve(),
-  SRC: Path.resolve('client/src'),
-  DIST: Path.resolve('client/dist'),
+  SRC: Path.resolve(),
 };
 
 const config = [
-  {
-    name: 'js',
-    entry: {
-      embargoExpiry: `${PATHS.SRC}/bundles/embargo-expiry.js`,
-    },
-    output: {
-      path: PATHS.DIST,
-      filename: 'js/embargo-expiry.js',
-    },
-    devtool: (ENV !== 'production') ? 'source-map' : '',
-    resolve: resolveJS(ENV, PATHS),
-    externals: externalJS(ENV, PATHS),
-    module: moduleJS(ENV, PATHS),
-    plugins: pluginJS(ENV, PATHS),
-  },
+  new JavascriptWebpackConfig('js', { ...PATHS, DIST: `${PATHS.ROOT}/client/dist/js/` })
+    .setEntry({
+      main: 'client/src/bundles/embargo-expiry.js'
+    })
+    // Output the javascript with a different filename schema than the default
+    .mergeConfig({
+      output: {
+        filename: 'embargo-expiry.js',
+      },
+    })
+    .getConfig(),
 ];
 
-// Use WEBPACK_CHILD=js or WEBPACK_CHILD=css env var to run a single config
-module.exports = (process.env.WEBPACK_CHILD)
-  ? config.find((entry) => entry.name === process.env.WEBPACK_CHILD)
-  : module.exports = config;
+module.exports = config;

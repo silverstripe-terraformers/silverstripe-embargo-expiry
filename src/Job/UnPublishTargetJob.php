@@ -7,6 +7,7 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\Versioned\Versioned;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
+use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
 
 /**
  * @property array|null $options
@@ -81,7 +82,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
             return;
         }
 
-        $target->setIsUnPublishJobRunning(true);
+        ActionProcessingState::singleton()->setActionIsProcessing(true);
 
         // Make sure to use local variables for passing by reference as these are job properties
         // which are manipulated via magic methods and these do not work with passing by reference directly
@@ -100,7 +101,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $target->invokeWithExtensions('afterUnPublishTargetJob', $options);
         $this->options = $options;
 
-        $target->setIsUnPublishJobRunning(false);
+        ActionProcessingState::singleton()->setActionIsProcessing(false);
         $this->completeJob();
     }
 
