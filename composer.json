@@ -28,7 +28,7 @@
   "require-dev": {
     "silverstripe/recipe-testing": "^3",
     "tractorcow/silverstripe-fluent": "^7",
-    "slevomat/coding-standard": "~8.0.0"
+    "slevomat/coding-standard": "~8.8.0"
   },
   "extra": {
     "expose": [
