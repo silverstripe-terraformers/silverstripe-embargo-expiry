@@ -12,10 +12,21 @@ const config = [
     .setEntry({
       main: 'client/src/bundles/embargo-expiry.js'
     })
-    // Output the javascript with a different filename schema than the default
+    // Output the css with a different filename schema than the default
     .mergeConfig({
       output: {
         filename: 'embargo-expiry.js',
+      },
+    })
+    .getConfig(),
+  new CssWebpackConfig('css', { ...PATHS, DIST: `${PATHS.ROOT}/client/dist/css/` })
+    .setEntry({
+      main: './client/src/styles/embargo.css'
+    })
+    // Output the css with a different filename schema than the default
+    .mergeConfig({
+      output: {
+        filename: 'embargo.css',
       },
     })
     .getConfig(),
