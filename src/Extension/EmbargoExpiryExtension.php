@@ -73,6 +73,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     public function updateCMSFields(FieldList $fields): void
     {
         Requirements::javascript('silverstripe-terraformers/embargo-expiry:client/dist/js/embargo-expiry.js');
+        Requirements::css('silverstripe-terraformers/embargo-expiry:client/dist/css/styles/main.css');
 
         $fields->removeByName([
             'PublishJobID',
