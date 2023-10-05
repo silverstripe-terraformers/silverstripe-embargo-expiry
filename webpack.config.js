@@ -5,6 +5,8 @@ const {
   externalJS,
   moduleJS,
   pluginJS,
+  moduleCSS,
+  pluginCSS,
 } = webpackConfig;
 
 const ENV = process.env.NODE_ENV;
@@ -31,6 +33,19 @@ const config = [
     externals: externalJS(ENV, PATHS),
     module: moduleJS(ENV, PATHS),
     plugins: pluginJS(ENV, PATHS),
+  },
+  {
+    name: 'css',
+    entry: {
+      main: `${PATHS.SRC}/styles/embargo.scss`
+    },
+    output: {
+      path: PATHS.DIST,
+      filename: 'mains.css'
+    },
+    devtool: (ENV !== 'production') ? 'source-map' : '',
+    module: moduleCSS(ENV, PATHS),
+    plugins: pluginCSS(ENV, PATHS),
   },
 ];
 
