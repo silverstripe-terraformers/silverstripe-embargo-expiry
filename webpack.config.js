@@ -17,7 +17,6 @@ const PATHS = {
   SRC: Path.resolve('client/src'),
   DIST: Path.resolve('client/dist'),
 };
-
 const config = [
   {
     name: 'js',
@@ -37,11 +36,11 @@ const config = [
   {
     name: 'css',
     entry: {
-      main: `${PATHS.SRC}/styles/embargo.scss`
+      main: `${PATHS.SRC}/styles/embargo.css`
     },
     output: {
       path: PATHS.DIST,
-      filename: 'mains.css'
+      filename: 'styles/main.css'
     },
     devtool: (ENV !== 'production') ? 'source-map' : '',
     module: moduleCSS(ENV, PATHS),
