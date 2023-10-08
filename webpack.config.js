@@ -36,7 +36,7 @@ const config = [
   {
     name: 'css',
     entry: {
-      main: `${PATHS.SRC}/styles/embargo.css`
+      main: `${PATHS.SRC}/styles/main.css`
     },
     output: {
       path: PATHS.DIST,
