@@ -8,3 +8,7 @@ SilverStripe\CMS\Controllers\CMSMain:
 SilverStripe\Versioned\VersionedGridFieldItemRequest:
   extensions:
     - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryGridFieldItemRequestExtension
+
+SilverStripe\Admin\LeftAndMain:
+  extensions:
+    - Terraformers\EmbargoExpiry\Extension\EmbargoExpiryLeftAndMainExtension

@@ -5,6 +5,8 @@ const {
   externalJS,
   moduleJS,
   pluginJS,
+  moduleCSS,
+  pluginCSS,
 } = webpackConfig;
 
 const ENV = process.env.NODE_ENV;
@@ -15,7 +17,6 @@ const PATHS = {
   SRC: Path.resolve('client/src'),
   DIST: Path.resolve('client/dist'),
 };
-
 const config = [
   {
     name: 'js',
@@ -31,6 +32,19 @@ const config = [
     externals: externalJS(ENV, PATHS),
     module: moduleJS(ENV, PATHS),
     plugins: pluginJS(ENV, PATHS),
+  },
+  {
+    name: 'css',
+    entry: {
+      main: `${PATHS.SRC}/styles/main.css`
+    },
+    output: {
+      path: PATHS.DIST,
+      filename: 'styles/main.css'
+    },
+    devtool: (ENV !== 'production') ? 'source-map' : '',
+    module: moduleCSS(ENV, PATHS),
+    plugins: pluginCSS(ENV, PATHS),
   },
 ];
 
