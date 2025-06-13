@@ -4,10 +4,10 @@ namespace Terraformers\EmbargoExpiry\Extension;
 
 use Exception;
 use Opis\Closure\SerializableClosure;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use TractorCow\Fluent\State\FluentState;
 
-class EmbargoExpiryFluentExtension extends DataExtension
+class EmbargoExpiryFluentExtension extends Extension
 {
     /**
      * Fluent specific configuration

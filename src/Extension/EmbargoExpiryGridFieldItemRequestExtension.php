@@ -7,13 +7,13 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
+use SilverStripe\Model\ModelDataCustomised;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\ValidationException;
 use SilverStripe\Versioned\VersionedGridFieldItemRequest;
-use SilverStripe\View\ViewableData_Customised;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Terraformers\EmbargoExpiry\Form\EmbargoExpiryFormAction;
 
@@ -60,7 +60,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * This action will remove any/all embargo related dates from a record as well as their related queued jobs for
      * publishing and/or unpublishing.
      *
-     * @return HTTPResponse|ViewableData_Customised|DBHTMLText
+     * @return HTTPResponse|ModelDataCustomised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      * @throws Exception
@@ -81,7 +81,7 @@ class EmbargoExpiryGridFieldItemRequestExtension extends Extension
      * This action will remove any/all embargo related dates from a record as well as theirelated queued jobs for
      * publishing and/or unpublishing.
      *
-     * @return HTTPResponse|ViewableData_Customised|DBHTMLText
+     * @return HTTPResponse|ModelDataCustomised|DBHTMLText
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      * @throws Exception

@@ -3,7 +3,11 @@
   "description": "Simple embargo & expiry for Site Tree",
   "type": "silverstripe-vendormodule",
   "keywords": [
-    "silverstripe", "embargo", "expiry", "publish", "unpublish"
+    "silverstripe",
+    "embargo",
+    "expiry",
+    "publish",
+    "unpublish"
   ],
   "license": "BSD-3-Clause",
   "authors": [
@@ -20,14 +24,14 @@
     "issues": "https://github.com/silverstripe-terraformers/embargo-expiry/issues"
   },
   "require": {
-    "php": "^8",
-    "silverstripe/cms": "^5",
-    "symbiote/silverstripe-queuedjobs": "^5",
+    "php": "^8.3",
+    "silverstripe/cms": "^6",
+    "symbiote/silverstripe-queuedjobs": "^6",
     "opis/closure": "^3.6"
   },
   "require-dev": {
-    "silverstripe/recipe-testing": "^3",
-    "tractorcow/silverstripe-fluent": "^7",
+    "silverstripe/recipe-testing": "^4",
+    "tractorcow/silverstripe-fluent": "^8",
     "slevomat/coding-standard": "~8.0.0"
   },
   "extra": {
