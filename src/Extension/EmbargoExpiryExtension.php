@@ -77,6 +77,10 @@ class EmbargoExpiryExtension extends Extension implements PermissionProvider
         $fields->removeByName([
             'PublishJobID',
             'UnPublishJobID',
+            'DesiredPublishDate',
+            'DesiredUnPublishDate',
+            'PublishOnDate',
+            'UnPublishOnDate',
         ]);
 
         $this->addNoticeOrWarningFields($fields);
