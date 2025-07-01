@@ -526,9 +526,8 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'validateFail1');
-        $validationResult = new ValidationResult();
 
-        $page->extend('validate', $validationResult);
+        $validationResult = $page->validate();
 
         $this->assertFalse($validationResult->isValid());
     }
@@ -539,9 +538,8 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'validateFail2');
-        $validationResult = new ValidationResult();
 
-        $page->extend('validate', $validationResult);
+        $validationResult = $page->validate();
 
         $this->assertFalse($validationResult->isValid());
     }
