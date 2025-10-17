@@ -2,33 +2,29 @@
 
 namespace Terraformers\EmbargoExpiry\Tests\Extension;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
 use Exception;
 use Page;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TabSet;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\ValidationException;
-use SilverStripe\ORM\ValidationResult;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
-use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
+use Terraformers\EmbargoExpiry\Tests\Mock\TestQueuedJobService;
 
 class EmbargoExpiryExtensionTest extends SapphireTest
 {
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryExtensionTest.yml'; // phpcs:ignore
+    protected static $fixture_file = 'EmbargoExpiryExtensionTest.yml';
 
-    /**
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
-     * @var array
-     */
     protected static $required_extensions = [
         SiteTree::class => [
             EmbargoExpiryExtension::class,
@@ -64,6 +60,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     {
         /** @var SiteTree|EmbargoExpiryExtension $page1 */
         $page1 = $this->objFromFixture(SiteTree::class, 'scheduledPublish1');
+
         /** @var SiteTree|EmbargoExpiryExtension $page2 */
         $page2 = $this->objFromFixture(SiteTree::class, 'scheduledPublish2');
 
@@ -75,6 +72,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     {
         /** @var SiteTree|EmbargoExpiryExtension $page1 */
         $page1 = $this->objFromFixture(SiteTree::class, 'scheduledUnPublish1');
+
         /** @var SiteTree|EmbargoExpiryExtension $page2 */
         $page2 = $this->objFromFixture(SiteTree::class, 'scheduledUnPublish2');
 
@@ -143,6 +141,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertFalse($page->isEditable());
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function testCreateOrUpdateJobMethods(): void
     {
         $embargo = '2014-02-05 12:00:00';
@@ -183,6 +184,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     public function testPublishJobProcesses(): void
     {
         $service = $this->getService();
+
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'embargo1');
 
@@ -235,12 +237,16 @@ class EmbargoExpiryExtensionTest extends SapphireTest
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'idfields');
+
         $fields = $page->getCMSFields();
 
         $this->assertNull($fields->dataFieldByName('PublishJobID'));
         $this->assertNull($fields->dataFieldByName('UnPublishJobID'));
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testMessageConditionsCanEdit(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', true);
@@ -271,6 +277,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testMessageConditionsCannotEditGuest(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
@@ -279,6 +288,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
+
         $fields = new FieldList();
 
         $page->addNoticeOrWarningFields($fields);
@@ -302,6 +312,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testMessageConditionsCannotEditAdmin(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
@@ -310,6 +323,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'messages1');
+
         $fields = new FieldList();
 
         $page->addNoticeOrWarningFields($fields);
@@ -333,6 +347,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertStringContainsString($expectedExpiryMessage, $content);
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testMessageConditionsWarning(): void
     {
         Config::modify()->set(SiteTree::class, 'allow_embargoed_editing', false);
@@ -341,6 +358,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'messages2');
+
         $fields = new FieldList();
 
         $page->addNoticeOrWarningFields($fields);
@@ -417,6 +435,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $fields = new FieldList([TabSet::create('Root')]);
 
         $page->addDesiredDateFields($fields);
@@ -438,6 +457,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $fields = new FieldList([TabSet::create('Root')]);
 
         $page->addScheduledDateFields($fields);
@@ -454,6 +474,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $fields = new FieldList([TabSet::create('Root')]);
 
         $page->addDesiredDateFields($fields);
@@ -475,6 +496,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $fields = new FieldList([TabSet::create('Root')]);
 
         $page->addScheduledDateFields($fields);
@@ -489,6 +511,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $actions = $page->getCMSActions();
 
         $this->assertNull($actions->fieldByName('action_removeEmbargoAction'));
@@ -501,6 +524,7 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'fields1');
+
         $actions = $page->getCMSActions();
 
         $this->assertNotNull($actions->fieldByName('action_removeEmbargoAction'));
@@ -513,9 +537,8 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'validatePass');
-        $validationResult = new ValidationResult();
 
-        $page->extend('validate', $validationResult);
+        $validationResult = $page->validate();
 
         $this->assertTrue($validationResult->isValid());
     }
@@ -526,9 +549,8 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'validateFail1');
-        $validationResult = new ValidationResult();
 
-        $page->extend('validate', $validationResult);
+        $validationResult = $page->validate();
 
         $this->assertFalse($validationResult->isValid());
     }
@@ -539,13 +561,15 @@ class EmbargoExpiryExtensionTest extends SapphireTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'validateFail2');
-        $validationResult = new ValidationResult();
 
-        $page->extend('validate', $validationResult);
+        $validationResult = $page->validate();
 
         $this->assertFalse($validationResult->isValid());
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testEmbargoMessagePassed(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
@@ -563,6 +587,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testEmbargoMessageFuture(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
@@ -580,6 +607,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testExpiryMessagePassed(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */
@@ -597,6 +627,9 @@ class EmbargoExpiryExtensionTest extends SapphireTest
         $this->assertEqualsCanonicalizing($expectedConditions, $page->getEmbargoExpiryNoticeFieldConditions());
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function testExpiryMessageFuture(): void
     {
         /** @var SiteTree|EmbargoExpiryExtension $page */

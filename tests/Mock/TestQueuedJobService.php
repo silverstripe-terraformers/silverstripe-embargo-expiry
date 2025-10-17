@@ -1,6 +1,6 @@
 <?php
 
-namespace Terraformers\EmbargoExpiry\Tests\Fake;
+namespace Terraformers\EmbargoExpiry\Tests\Mock;
 
 use Exception;
 use SilverStripe\Dev\TestOnly;
@@ -13,11 +13,7 @@ use Symbiote\QueuedJobs\Services\QueuedJobService;
  */
 class TestQueuedJobService extends QueuedJobService implements TestOnly
 {
-    /**
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
-     * @var array
-     */
-    private static $dependencies = [
+    private static array $dependencies = [
         'queueHandler' => '%$QueueHandler',
     ];
 
@@ -25,7 +21,7 @@ class TestQueuedJobService extends QueuedJobService implements TestOnly
      * @return bool|QueuedJob
      * @throws Exception
      */
-    public function testInit(QueuedJobDescriptor $descriptor) // phpcs:ignore SlevomatCodingStandard.TypeHints
+    public function testInit(QueuedJobDescriptor $descriptor): mixed
     {
         return $this->initialiseJob($descriptor);
     }

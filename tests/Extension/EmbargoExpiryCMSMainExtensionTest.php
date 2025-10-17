@@ -19,10 +19,9 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryCMSMainExtensionTest.yml'; // phpcs:ignore
+    protected static $fixture_file = 'EmbargoExpiryCMSMainExtensionTest.yml';
 
     /**
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
      * @var array
      */
     protected static $required_extensions = [
@@ -60,7 +59,8 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
-        $id = $page->ID;
+
+        $pageID = $page->ID;
 
         // Check that we're set up correctly.
         $this->assertTrue($page->getIsPublishScheduled());
@@ -68,18 +68,18 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 
         // Post a request to remove the embargo date.
         $this->post(
-            sprintf('admin/pages/edit/EditForm/%s', $id),
+            sprintf('admin/pages/edit/EditForm/%s', $pageID),
             [
                 'ClassName' => SiteTree::class,
-                'ID' => $id,
+                'ID' => $pageID,
                 'action_removeEmbargoAction' => 1,
                 'ajax' => 1,
             ]
         );
 
-        // Refetch object from DB.
+        // Re-fetch object from DB.
         /** @var SiteTree|EmbargoExpiryExtension $page */
-        $page = SiteTree::get()->byID($id);
+        $page = SiteTree::get()->byID($pageID);
 
         $this->assertFalse($page->getIsPublishScheduled());
         $this->assertTrue($page->getIsUnPublishScheduled());
@@ -91,7 +91,7 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'contact');
-        $id = $page->ID;
+        $pageID = $page->ID;
 
         // Check that we're set up correctly.
         $this->assertTrue($page->getIsPublishScheduled());
@@ -99,17 +99,18 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 
         // Post a request to remove the embargo date.
         $this->post(
-            sprintf('admin/pages/edit/EditForm/%s', $id),
+            sprintf('admin/pages/edit/EditForm/%s', $pageID),
             [
                 'ClassName' => SiteTree::class,
-                'ID' => $id,
+                'ID' => $pageID,
                 'action_removeExpiryAction' => 1,
                 'ajax' => 1,
             ]
         );
 
-        // Refetch object from DB.
-        $page = SiteTree::get()->byID($id);
+        // Re-fetch object from DB.
+        /** @var SiteTree|EmbargoExpiryExtension $page */
+        $page = SiteTree::get()->byID($pageID);
 
         $this->assertTrue($page->getIsPublishScheduled());
         $this->assertFalse($page->getIsUnPublishScheduled());
@@ -140,18 +141,20 @@ class EmbargoExpiryCMSMainExtensionTest extends FunctionalTest
 
         /** @var Member $member */
         $member = $this->objFromFixture(Member::class, 'user1');
+
         $this->logInAs($member);
 
         /** @var SiteTree|EmbargoExpiryExtension $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
-        $id = $page->ID;
+
+        $pageID = $page->ID;
 
         // Post a request to remove the embargo date.
         $this->post(
-            sprintf('admin/pages/edit/EditForm/%s', $id),
+            sprintf('admin/pages/edit/EditForm/%s', $pageID),
             [
                 'ClassName' => SiteTree::class,
-                'ID' => $id,
+                'ID' => $pageID,
                 'action_removeExpiryAction' => 1,
                 'ajax' => 1,
             ]
