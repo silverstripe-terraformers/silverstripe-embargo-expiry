@@ -8,12 +8,14 @@ use SilverStripe\Versioned\Versioned;
 use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
+use Terraformers\EmbargoExpiry\Job\Traits\RetryTrait;
 
 /**
  * @property array|null $options
  */
 class UnPublishTargetJob extends AbstractQueuedJob
 {
+    use RetryTrait;
 
     /**
      * @var DataObject
@@ -90,9 +92,11 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $target->invokeWithExtensions('preUnPublishTargetJob', $options);
         $this->options = $options;
 
-        $target->unlinkUnPublishJobAndDate();
-        $target->writeWithoutVersion();
-        $target->doUnpublish();
+        $this->executeRetry($target, function (DataObject $target) {
+            $target->unlinkUnPublishJobAndDate();
+            $target->writeWithoutVersion();
+            $target->doUnpublish();
+        }, "Failed to unpublish after %d retries (DB contention)");
 
         // Make sure to use local variables for passing by reference as these are job properties
         // which are manipulated via magic methods and these do not work with passing by reference directly
