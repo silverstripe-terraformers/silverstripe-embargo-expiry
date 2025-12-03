@@ -2,18 +2,20 @@
 
 namespace Terraformers\EmbargoExpiry\Extension;
 
+use DateMalformedStringException;
 use DateTimeImmutable;
+use SilverStripe\Core\Extension;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
-use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
@@ -26,23 +28,24 @@ use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
 use Terraformers\EmbargoExpiry\Job\UnPublishTargetJob;
 
 /**
- * @property DataObject|$this $owner
- * @property DBDatetime $DesiredPublishDate
- * @property DBDatetime $DesiredUnPublishDate
- * @property DBDatetime $PublishOnDate
- * @property DBDatetime $UnPublishOnDate
+ * @property string $DesiredPublishDate
+ * @property string $DesiredUnPublishDate
+ * @property string $PublishOnDate
+ * @property string $UnPublishOnDate
  * @property int $PublishJobID
  * @property int $UnPublishJobID
  * @method QueuedJobDescriptor PublishJob()
  * @method QueuedJobDescriptor UnPublishJob()
+ * @extends Extension<DataObject>
+ * @extends Extension<EmbargoExpiryExtension>
  */
-class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
+class EmbargoExpiryExtension extends Extension implements PermissionProvider
 {
-    public const PERMISSION_ADD = 'AddEmbargoExpiry';
-    public const PERMISSION_REMOVE = 'RemoveEmbargoExpiry';
+    public const string PERMISSION_ADD = 'AddEmbargoExpiry';
+    public const string PERMISSION_REMOVE = 'RemoveEmbargoExpiry';
 
-    public const JOB_TYPE_PUBLISH = 'publish';
-    public const JOB_TYPE_UNPUBLISH = 'unpublish';
+    public const string JOB_TYPE_PUBLISH = 'publish';
+    public const string JOB_TYPE_UNPUBLISH = 'unpublish';
 
     private static array $db = [
         'DesiredPublishDate' => 'Datetime',
@@ -61,16 +64,20 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      *
      * @var bool
      */
-    public $isPublishJobRunning = false; // phpcs:ignore
+    public bool $isPublishJobRunning = false;
 
     /**
      * Property used to track when a DataObject is being accessed during a UnPublishTargetJob.
      *
      * @var bool
      */
-    public $isUnPublishJobRunning = false; // phpcs:ignore
+    public bool $isUnPublishJobRunning = false;
 
-    public function updateCMSFields(FieldList $fields): void
+    /**
+     * Extension point in @see DataObject::getCMSFields()
+     * @throws DateMalformedStringException
+     */
+    protected function updateCMSFields(FieldList $fields): void
     {
         Requirements::javascript('silverstripe-terraformers/embargo-expiry:client/dist/js/embargo-expiry.js');
 
@@ -86,35 +93,39 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     /**
      * If this Object requires sequential embargo/expiry dates, then let's make sure it has that.
+     * Extension point in @see DataObject::validate()
+     * @throws DateMalformedStringException
      */
-    public function validate(ValidationResult $validationResult): ValidationResult
+    protected function updateValidate(ValidationResult $validationResult): ValidationResult
     {
+        $owner = $this->getOwner();
+
         // We don't require sequential dates.
-        if (!$this->owner->config()->get('enforce_sequential_dates')) {
+        if (!$owner->config()->get('enforce_sequential_dates')) {
             return $validationResult;
         }
 
         // We only have 1 or 0 dates set, so we don't need to check for sequential.
-        if (!$this->owner->DesiredPublishDate) {
+        if (!$owner->DesiredPublishDate) {
             return $validationResult;
         }
 
         // If a DesiredUnPublish date is set, then use that, otherwise use UnPublishOnDate.
-        $unPublishDate = $this->owner->DesiredUnPublishDate ?? $this->owner->UnPublishOnDate;
+        $unPublishDate = $owner->DesiredUnPublishDate ?? $owner->UnPublishOnDate;
 
         // There is no DesiredUnPublish or UnPublishOnDate, so we don't need to check for sequential.
         if (!$unPublishDate) {
             return $validationResult;
         }
 
-        $publishTime = new DateTimeImmutable($this->owner->DesiredPublishDate);
+        $publishTime = new DateTimeImmutable($owner->DesiredPublishDate);
         $unpublishTime = new DateTimeImmutable($unPublishDate);
 
         if ($publishTime > $unpublishTime) {
             $validationResult->addFieldError(
                 'DesiredPublishDate',
                 _t(
-                    self::class . 'FAILED_SEQUENTIAL_DATES',
+                    EmbargoExpiryExtension::class . '.FAILED_SEQUENTIAL_DATES',
                     'Your publish date cannot be set for after your un-publish date.'
                 )
             );
@@ -123,45 +134,53 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         return $validationResult;
     }
 
-    public function updateCMSActions(FieldList $actions): void
+    /**
+     * Extension point in @see DataObject::getCMSActions()
+     */
+    protected function updateCMSActions(FieldList $actions): void
     {
-        if (!$this->owner->checkRemovePermission()) {
+        $owner = $this->getOwner();
+
+        if (!$owner->checkRemovePermission()) {
             return;
         }
 
         if ($this->getIsPublishScheduled()) {
             // Add action to remove embargo.
-            $action = FormAction::create('removeEmbargoAction', _t(self::class . '.REMOVE_EMBARGO', 'Remove embargo'));
+            $action = FormAction::create(
+                'removeEmbargoAction',
+                _t(EmbargoExpiryExtension::class . '.REMOVE_EMBARGO', 'Remove embargo')
+            );
             $actions->insertBefore('ActionMenus', $action);
         }
 
         if ($this->getIsUnPublishScheduled()) {
             // Add action to remove embargo.
-            $action = FormAction::create('removeExpiryAction', _t(self::class . '.REMOVE_EXPIRY', 'Remove expiry'));
+            $action = FormAction::create(
+                'removeExpiryAction',
+                _t(EmbargoExpiryExtension::class . '.REMOVE_EXPIRY', 'Remove expiry')
+            );
             $actions->insertBefore('ActionMenus', $action);
         }
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function providePermissions(): array
     {
         return [
-            self::PERMISSION_ADD => [
-                'name' => _t(self::class . '.ADD_EMBARGO_EXPIRY', 'Add Embargo & Expiry'),
+            EmbargoExpiryExtension::PERMISSION_ADD => [
+                'name' => _t(EmbargoExpiryExtension::class . '.ADD_EMBARGO_EXPIRY', 'Add Embargo & Expiry'),
                 'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
                 'help' => _t(
-                    self::class . '.ADD_EMBARGO_EXPIRY_HELP',
+                    EmbargoExpiryExtension::class . '.ADD_EMBARGO_EXPIRY_HELP',
                     'Ability to add Embargo & Expiry dates to a record.'
                 ),
                 'sort' => 101,
             ],
-            self::PERMISSION_REMOVE => [
-                'name' => _t(self::class . '.REMOVE_EMBARGO_EXPIRY', 'Remove Embargo & Expiry'),
+            EmbargoExpiryExtension::PERMISSION_REMOVE => [
+                'name' => _t(EmbargoExpiryExtension::class . '.REMOVE_EMBARGO_EXPIRY', 'Remove Embargo & Expiry'),
                 'category' => _t('SilverStripe\\Security\\Permission.CONTENT_CATEGORY', 'Content permissions'),
                 'help' => _t(
-                    self::class . '.REMOVE_EMBARGO_EXPIRY_HELP',
+                    EmbargoExpiryExtension::class . '.REMOVE_EMBARGO_EXPIRY_HELP',
                     'Ability to remove Embargo & Expiry dates from a record.'
                 ),
                 'sort' => 102,
@@ -169,40 +188,48 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         ];
     }
 
-    public function onBeforeWrite(): void
+    /**
+     * Extension point in @see DataObject::onBeforeWrite()
+     * @throws ValidationException
+     */
+    protected function onBeforeWrite(): void
     {
+        $owner = $this->getOwner();
+
         // Only operate on staging content for this extension; otherwise, you need to publish the page to be able to set
-        // a 'future' publish... While the same could be said for the unpublish, the 'publish' state is the one that
+        // a 'future' publish... While the same could be said for the un-publish, the 'publish' state is the one that
         // must be avoided so we allow setting the 'unpublish' date for as-yet-not-published content.
         if (Versioned::get_stage() === Versioned::LIVE) {
             return;
         }
 
         // Jobs can only be queued for records that already exist
-        if (!$this->owner->isInDB()) {
+        if (!$owner->isInDB()) {
             return;
         }
 
         // We allow other extensions/modules to prevent Jobs from being queued (only temporarily though, we hope). EG:
         // The Advanced Workflow module will prevent Jobs being queued during write() operations if a Workflow is set,
         // and will later allow them during an approval step
-        $extensionResults = $this->owner->invokeWithExtensions('preventEmbargoExpiryQueueJobs');
+        $extensionResults = $owner->invokeWithExtensions('preventEmbargoExpiryQueueJobs');
 
         if (in_array(true, $extensionResults, true)) {
             return;
         }
 
-        $this->owner->ensurePublishJob();
-        $this->owner->ensureUnPublishJob();
+        $owner->ensurePublishJob();
+        $owner->ensureUnPublishJob();
     }
 
     /**
      * Add badges to the site tree view to show that a page has been scheduled for publishing or unpublishing
+     * Extension point in @see DataObject::getStatusFlags()
      */
-    public function updateStatusFlags(array &$flags): void
+    protected function updateStatusFlags(array &$flags): void
     {
-        $embargo = $this->owner->getIsPublishScheduled();
-        $expiry = $this->owner->getIsUnPublishScheduled();
+        $owner = $this->getOwner();
+        $embargo = $owner->getIsPublishScheduled();
+        $expiry = $owner->getIsUnPublishScheduled();
 
         if (!$embargo && !$expiry) {
             return;
@@ -213,13 +240,13 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($embargo && $expiry) {
             $flags['embargo_expiry'] = [
-                'text' => _t(self::class . '.BADGE_PUBLISH_UNPUBLISH', 'Embargo+Expiry'),
+                'text' => _t(EmbargoExpiryExtension::class . '.BADGE_PUBLISH_UNPUBLISH', 'Embargo+Expiry'),
                 'title' => sprintf(
                     '%s: %s, %s: %s',
-                    _t(self::class . '.PUBLISH_ON', 'Scheduled publish date'),
-                    $this->owner->PublishOnDate,
-                    _t(self::class . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
-                    $this->owner->UnPublishOnDate
+                    _t(EmbargoExpiryExtension::class . '.PUBLISH_ON', 'Scheduled publish date'),
+                    $owner->PublishOnDate,
+                    _t(EmbargoExpiryExtension::class . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
+                    $owner->UnPublishOnDate
                 ),
             ];
 
@@ -228,11 +255,11 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($embargo) {
             $flags['embargo'] = [
-                'text' => _t(self::class . '.BADGE_PUBLISH', 'Embargo'),
+                'text' => _t(EmbargoExpiryExtension::class . '.BADGE_PUBLISH', 'Embargo'),
                 'title' => sprintf(
                     '%s: %s',
-                    _t(self::class . '.PUBLISH_ON', 'Scheduled publish date'),
-                    $this->owner->PublishOnDate
+                    _t(EmbargoExpiryExtension::class . '.PUBLISH_ON', 'Scheduled publish date'),
+                    $owner->PublishOnDate
                 ),
             ];
 
@@ -240,11 +267,11 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         $flags['expiry'] = [
-            'text' => _t(self::class . '.BADGE_UNPUBLISH', 'Expiry'),
+            'text' => _t(EmbargoExpiryExtension::class . '.BADGE_UNPUBLISH', 'Expiry'),
             'title' => sprintf(
                 '%s: %s',
-                _t(self::class . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
-                $this->owner->UnPublishOnDate
+                _t(EmbargoExpiryExtension::class . '.UNPUBLISH_ON', 'Scheduled un-publish date'),
+                $owner->UnPublishOnDate
             ),
         ];
     }
@@ -252,39 +279,39 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * Add edit check for when publishing has been scheduled and if any workflow definitions want the item to be
      * disabled.
-     *
-     * @param Member|int|null $member
+     * Extension point in @see DataObject::canEdit()
      */
-    public function canEdit($member = null): ?bool
+    protected function canEdit(?Member $member = null): ?bool
     {
-        return $this->owner->isEditable();
+        $owner = $this->getOwner();
+
+        return $owner->isEditable();
     }
 
     /**
      * Add edit check for when publishing has been scheduled and if any workflow definitions want the item to be
      * disabled.
-     *
-     * @param Member|int|null $member
+     * Extension point in @see Versioned::canPublish()
      */
-    public function canPublish($member = null): ?bool
+    protected function canPublish(?Member $member = null): ?bool
     {
-        return $this->owner->isEditable();
+        $owner = $this->getOwner();
+
+        return $owner->isEditable();
     }
 
-    /**
-     * @param Member|int|null $member
-     */
-    public function checkAddPermission($member = null): bool
+    public function checkAddPermission(?Member $member = null): bool
     {
-        return Permission::checkMember($member, [self::PERMISSION_ADD]);
+        return Permission::checkMember($member, [
+            EmbargoExpiryExtension::PERMISSION_ADD,
+        ]);
     }
 
-    /**
-     * @param Member|int|null $member
-     */
-    public function checkRemovePermission($member = null): bool
+    public function checkRemovePermission(?Member $member = null): bool
     {
-        return Permission::checkMember($member, [self::PERMISSION_REMOVE]);
+        return Permission::checkMember($member, [
+            EmbargoExpiryExtension::PERMISSION_REMOVE,
+        ]);
     }
 
     /**
@@ -293,8 +320,10 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function unlinkPublishJobAndDate(): void
     {
-        $this->owner->PublishOnDate = null;
-        $this->owner->PublishJobID = 0;
+        $owner = $this->getOwner();
+
+        $owner->PublishOnDate = null;
+        $owner->PublishJobID = 0;
     }
 
     /**
@@ -303,8 +332,10 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function unlinkUnPublishJobAndDate(): void
     {
-        $this->owner->UnPublishOnDate = null;
-        $this->owner->UnPublishJobID = 0;
+        $owner = $this->getOwner();
+
+        $owner->UnPublishOnDate = null;
+        $owner->UnPublishJobID = 0;
     }
 
     /**
@@ -312,19 +343,21 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function clearPublishJob(): void
     {
+        $owner = $this->getOwner();
+
         // Can't clear a job while it's in the process of being completed.
         if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
-        $job = $this->owner->PublishJob();
+        $job = $owner->PublishJob();
 
         if ($job !== null && $job->exists()) {
             $job->delete();
         }
 
-        $this->owner->PublishJobID = 0;
-        $this->owner->PublishOnDate = null;
+        $owner->PublishJobID = 0;
+        $owner->PublishOnDate = null;
     }
 
     /**
@@ -332,65 +365,78 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function clearUnPublishJob(): void
     {
+        $owner = $this->getOwner();
+
         // Can't clear a job while it's in the process of being completed.
         if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
-        $job = $this->owner->UnPublishJob();
+        $job = $owner->UnPublishJob();
 
         if ($job !== null && $job->exists()) {
             $job->delete();
         }
 
-        $this->owner->UnPublishJobID = 0;
-        $this->owner->UnPublishOnDate = null;
+        $owner->UnPublishJobID = 0;
+        $owner->UnPublishOnDate = null;
     }
 
     public function getDesiredPublishDateAsTimestamp(): int
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('DesiredPublishDate');
+        $desiredPublishTimeField = $owner->dbObject('DesiredPublishDate');
 
         return $desiredPublishTimeField->getTimestamp();
     }
 
     public function getPublishOnDateAsTimestamp(): int
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('PublishOnDate');
+        $desiredPublishTimeField = $owner->dbObject('PublishOnDate');
 
         return $desiredPublishTimeField->getTimestamp();
     }
 
     public function getDesiredUnPublishDateAsTimestamp(): int
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('DesiredUnPublishDate');
+        $desiredPublishTimeField = $owner->dbObject('DesiredUnPublishDate');
 
         return $desiredPublishTimeField->getTimestamp();
     }
 
     public function getUnPublishOnDateAsTimestamp(): int
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $desiredPublishTimeField */
-        $desiredPublishTimeField = $this->owner->dbObject('UnPublishOnDate');
+        $desiredPublishTimeField = $owner->dbObject('UnPublishOnDate');
 
         return $desiredPublishTimeField->getTimestamp();
     }
 
     /**
-     * Ensure the existence (or removal) of a publish job at the specified time.
+     * Ensure the existence (or removal) of a Publish job at the specified time.
+     * @throws ValidationException
      */
     public function ensurePublishJob(): void
     {
+        $owner = $this->getOwner();
+
         // Can't clear a job while it's in the process of being completed.
         if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
         // You don't have permission to do this.
-        if (!$this->owner->checkAddPermission()) {
+        if (!$owner->checkAddPermission()) {
             return;
         }
 
@@ -414,16 +460,19 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     /**
      * Ensure the existence (or removal) of an unpublish job at the specified time.
+     * @throws ValidationException
      */
     public function ensureUnPublishJob(): void
     {
+        $owner = $this->getOwner();
+
         // Can't clear a job while it's in the process of being completed.
         if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return;
         }
 
         // You don't have permission to do this.
-        if (!$this->owner->checkAddPermission()) {
+        if (!$owner->checkAddPermission()) {
             return;
         }
 
@@ -446,6 +495,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     public function objectRequiresPublishJob(): bool
     {
+        $owner = $this->getOwner();
+
         // New desired dates (if set).
         $desiredPublishTime = $this->getDesiredPublishDateAsTimestamp();
         $desiredUnPublishTime = $this->getDesiredUnPublishDateAsTimestamp();
@@ -460,7 +511,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         // You might have some additional requirements for allowing a PublishJob to be created.
         /** @var array|bool[] $canHavePublishJob */
-        $canHavePublishJob = $this->owner->invokeWithExtensions('publishJobCanBeQueued');
+        $canHavePublishJob = $owner->invokeWithExtensions('publishJobCanBeQueued');
 
         // One or more extensions said that this Object cannot have a PublishJob.
         if (in_array(false, $canHavePublishJob)) {
@@ -468,7 +519,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // You don't currently require sequential dates, so we're good to go!
-        if (!$this->owner->config()->get('enforce_sequential_dates')) {
+        if (!$owner->config()->get('enforce_sequential_dates')) {
             return true;
         }
 
@@ -477,6 +528,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     public function objectRequiresUnPublishJob(): bool
     {
+        $owner = $this->getOwner();
+
         // New desired date (if set).
         $desiredUnPublishTime = $this->getDesiredUnPublishDateAsTimestamp();
 
@@ -487,7 +540,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         // You might have some additional requirements for allowing a UnPublishJob to be created.
         /** @var array|bool[] $canHaveUnPublishJob */
-        $canHaveUnPublishJob = $this->owner->invokeWithExtensions('unPublishJobCanBeQueued');
+        $canHaveUnPublishJob = $owner->invokeWithExtensions('unPublishJobCanBeQueued');
 
         // One or more extensions said that this Object cannot have an UnPublishJob.
         if (in_array(false, $canHaveUnPublishJob)) {
@@ -501,12 +554,12 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     public function datesAreSequential(int $desiredPublishTime, int $desiredUnPublishTime, int $unPublishTime): bool
     {
-        // The desired publish date is set after the desired un-publish date, and you require sequential dates.
+        // The desired publishing date is set after the desired un-publish date, and you require sequential dates.
         if ($desiredUnPublishTime && $desiredPublishTime > $desiredUnPublishTime) {
             return false;
         }
 
-        // The desired publish date is set after the active un-publish date, and you require sequential dates.
+        // The desired publishing date is set after the active un-publish date, and you require sequential dates.
         if ($unPublishTime && $desiredPublishTime > $unPublishTime) {
             return false;
         }
@@ -514,12 +567,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         return true;
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function createOrUpdatePublishJob(int $desiredPublishTime): void
     {
+        $owner = $this->getOwner();
         $now = DBDatetime::now()->getTimestamp();
 
         // Grab any existing PublishJob.
-        $job = $this->owner->PublishJob();
+        $job = $owner->PublishJob();
 
         // If the existing PublishJob already represents the same date, then leave it be and exit early.
         if ($job !== null
@@ -536,16 +593,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // Clear any exiting PublishJob.
-        $this->owner->clearPublishJob();
+        $owner->clearPublishJob();
 
         $options = [];
 
         // If you have some extra options that you would like to pass to your Job, add them here.
-        $this->owner->invokeWithExtensions('updatePublishTargetJobOptions', $options);
+        $owner->invokeWithExtensions('updatePublishTargetJobOptions', $options);
 
         // Do you want to use a different queue? You can define it at a DataObject level using this config. Your options
         // are: 1 (immediate), 2 (queued), 3 (large). See QueuedJob constants. Default is 2 (queued).
-        $queueID = (int) $this->owner->config()->get('publish_target_job_queue_id');
+        $queueID = (int) $owner->config()->get('publish_target_job_queue_id');
 
         // Make sure the value set is valid, if it isn't, set back to default.
         if ($queueID === 0) {
@@ -560,20 +617,23 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ? date('Y-m-d H:i:s', $desiredPublishTime)
             : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $job = Injector::inst()->create(PublishTargetJob::class, $this->owner, $options);
-        $this->owner->PublishJobID = QueuedJobService::singleton()
-            ->queueJob($job, $jobTime, null, $queueID);
+        $job = Injector::inst()->create(PublishTargetJob::class, $owner, $options);
+        $owner->PublishJobID = QueuedJobService::singleton()->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our PublishOnDate is up to date.
         $this->updatePublishOnDate($updateTime);
     }
 
+    /**
+     * @throws ValidationException
+     */
     public function createOrUpdateUnPublishJob(int $desiredUnPublishTime): void
     {
+        $owner = $this->getOwner();
         $now = DBDatetime::now()->getTimestamp();
 
         // Grab any existing UnPublishJob.
-        $job = $this->owner->UnPublishJob();
+        $job = $owner->UnPublishJob();
 
         // If the existing UnPublishJob already represents the same date, then leave it be and exit early.
         if ($job !== null
@@ -590,15 +650,15 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // Clear any exiting UnPublishJob.
-        $this->owner->clearUnPublishJob();
+        $owner->clearUnPublishJob();
 
         $options = [];
 
-        $this->owner->invokeWithExtensions('updateUnPublishTargetJobOptions', $options);
+        $owner->invokeWithExtensions('updateUnPublishTargetJobOptions', $options);
 
         // Do you want to use a different queue? You can define it at a DataObject level using this config. Your options
         // are: 1 (immediate), 2 (queued), 3 (large). See QueuedJob constants. Default is 2 (queued).
-        $queueID = (int) $this->owner->config()->get('un_publish_target_job_queue_id');
+        $queueID = (int) $owner->config()->get('un_publish_target_job_queue_id');
 
         // Make sure the value set is valid, if it isn't, set back to default.
         if ($queueID === 0) {
@@ -613,9 +673,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             ? date('Y-m-d H:i:s', $desiredUnPublishTime)
             : null;
         // @todo There is a PR on QueuedJobs to use injectable. Should update this once that goes through.
-        $job = Injector::inst()->create(UnPublishTargetJob::class, $this->owner, $options);
-        $this->owner->UnPublishJobID = QueuedJobService::singleton()
-            ->queueJob($job, $jobTime, null, $queueID);
+        $job = Injector::inst()->create(UnPublishTargetJob::class, $owner, $options);
+        $owner->UnPublishJobID = QueuedJobService::singleton()->queueJob($job, $jobTime, null, $queueID);
 
         // Make sure our UnPublishOnDate is up to date.
         $this->updateUnPublishOnDate($updateTime);
@@ -626,14 +685,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function getIsPublishScheduled(): bool
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $publishTime */
-        $publishTime = $this->owner->dbObject('PublishOnDate');
+        $publishTime = $owner->dbObject('PublishOnDate');
 
         if ($publishTime->InFuture()) {
             return true;
         }
 
-        if ((int) $this->owner->PublishJobID !== 0) {
+        if ((int) $owner->PublishJobID !== 0) {
             return true;
         }
 
@@ -645,14 +706,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function getIsUnPublishScheduled(): bool
     {
+        $owner = $this->getOwner();
+
         /** @var DBDatetime $unPublishTime */
-        $unPublishTime = $this->owner->dbObject('UnPublishOnDate');
+        $unPublishTime = $owner->dbObject('UnPublishOnDate');
 
         if ($unPublishTime->InFuture()) {
             return true;
         }
 
-        return (int) $this->owner->UnPublishJobID !== 0;
+        return (int) $owner->UnPublishJobID !== 0;
     }
 
     /**
@@ -661,6 +724,8 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      */
     public function isEditable(): ?bool
     {
+        $owner = $this->getOwner();
+
         // Need to be able to save the DataObject if this is being called during either of our Jobs.
         if (ActionProcessingState::singleton()->getActionIsProcessing()) {
             return true;
@@ -668,15 +733,15 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         // If the owner object allows embargoed editing, then return null, so we can fall back to SiteTree behaviours
         // (SiteTree and inherited permissions)
-        if ($this->owner->config()->get('allow_embargoed_editing')) {
+        if ($owner->config()->get('allow_embargoed_editing')) {
             return null;
         }
 
-        if ($this->owner->getIsPublishScheduled()) {
+        if ($owner->getIsPublishScheduled()) {
             return false;
         }
 
-        $embargoRecordIsEditable = $this->owner->invokeWithExtensions('embargoRecordIsEditable');
+        $embargoRecordIsEditable = $owner->invokeWithExtensions('embargoRecordIsEditable');
 
         if (in_array(false, $embargoRecordIsEditable)) {
             return false;
@@ -688,9 +753,11 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     public function addDesiredDateFields(FieldList $fields): void
     {
+        $owner = $this->getOwner();
+
         $fields->findOrMakeTab(
             'Root.PublishingSchedule',
-            _t(self::class . '.TAB_TITLE', 'Publishing Schedule')
+            _t(EmbargoExpiryExtension::class . '.TAB_TITLE', 'Publishing Schedule')
         );
 
         $fields->addFieldsToTab(
@@ -698,16 +765,16 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             [
                 HeaderField::create(
                     'PublishDateHeader',
-                    _t(self::class . '.PUBLISH_DATE_HEADER', 'Expiry and Embargo'),
+                    _t(EmbargoExpiryExtension::class . '.PUBLISH_DATE_HEADER', 'Expiry and Embargo'),
                     3
                 ),
                 $publishDateField = DatetimeField::create(
                     'DesiredPublishDate',
-                    _t(self::class . '.DESIRED_PUBLISH_ON', 'Desired publish date')
+                    _t(EmbargoExpiryExtension::class . '.DESIRED_PUBLISH_ON', 'Desired publish date')
                 ),
                 $unPublishDateField = DatetimeField::create(
                     'DesiredUnPublishDate',
-                    _t(self::class . '.DESIRED_UNPUBLISH_ON', 'Desired un-publish date')
+                    _t(EmbargoExpiryExtension::class . '.DESIRED_UNPUBLISH_ON', 'Desired un-publish date')
                 ),
             ]
         );
@@ -726,7 +793,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         }
 
         // You have permission to edit this record. Exit early.
-        if ($this->owner->checkAddPermission()) {
+        if ($owner->checkAddPermission()) {
             return;
         }
 
@@ -743,8 +810,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         $newFields = [];
 
-        $message = _t(self::class . '.EXISTING_PUBLISH_MESSAGE', 'Existing embargo schedule.');
-
+        $message = _t(EmbargoExpiryExtension::class . '.EXISTING_PUBLISH_MESSAGE', 'Existing embargo schedule.');
         $newFields[] = LiteralField::create(
             'ExistingPublishScheduleInfo',
             sprintf('<h4 class="notice">%s</h4>', $message)
@@ -753,21 +819,18 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if ($this->getIsPublishScheduled()) {
             $newFields[] = ReadonlyField::create(
                 'PublishOnDate',
-                _t(self::class . '.PUBLISH_ON', 'Scheduled publish date')
+                _t(EmbargoExpiryExtension::class . '.PUBLISH_ON', 'Scheduled publish date')
             );
         }
 
         if ($this->getIsUnPublishScheduled()) {
             $newFields[] = ReadonlyField::create(
                 'UnPublishOnDate',
-                _t(self::class . '.UNPUBLISH_ON', 'Scheduled un-publish date')
+                _t(EmbargoExpiryExtension::class . '.UNPUBLISH_ON', 'Scheduled un-publish date')
             );
         }
 
-        $fields->addFieldsToTab(
-            'Root.PublishingSchedule',
-            $newFields
-        );
+        $fields->addFieldsToTab('Root.PublishingSchedule', $newFields);
     }
 
     public function getEmbargoExpiryFieldNoticeMessage(): ?string
@@ -780,18 +843,21 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         if ($this->checkAddPermission()) {
             return _t(
-                self::class . '.EDITABLE_NOTICE',
+                EmbargoExpiryExtension::class . '.EDITABLE_NOTICE',
                 'Enter a date and/or time to specify embargo and expiry dates.<br />
                 If an embargo is already set, adding a new one prior to that date\'s passing will overwrite it.'
             );
         }
 
         return _t(
-            self::class . '.NOTEDITABLE_NOTICE',
+            EmbargoExpiryExtension::class . '.NOTEDITABLE_NOTICE',
             'Please contact an administrator if you wish to add an embargo or expiry date to this record.'
         );
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function addNoticeOrWarningFields(FieldList $fields): void
     {
         $conditions = $this->getEmbargoExpiryNoticeFieldConditions();
@@ -811,7 +877,10 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
                 $warning = sprintf(
                     '<strong>%s</strong>',
-                    _t(self::class . '.PAST_DATE_WARNING', ' (this date is in the past, is it still valid?)')
+                    _t(
+                        EmbargoExpiryExtension::class . '.PAST_DATE_WARNING',
+                        ' (this date is in the past, is it still valid?)'
+                    )
                 );
             }
 
@@ -823,36 +892,40 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
             );
         }
 
-        $fields->unshift(
-            LiteralField::create(
-                'EmbargoExpiryNotice',
-                sprintf('<p class="message %s">%s</p>', $type, $message)
-            )
+        $embargoExpiryNoticeField = LiteralField::create(
+            'EmbargoExpiryNotice',
+            sprintf('<p class="message %s">%s</p>', $type, $message)
         );
+
+        $fields->unshift($embargoExpiryNoticeField);
     }
 
+    /**
+     * @throws DateMalformedStringException
+     */
     public function getEmbargoExpiryNoticeFieldConditions(): array
     {
+        $owner = $this->getOwner();
         $conditions = [];
         $now = DBDatetime::now()->getTimestamp();
 
         if ($this->getPublishOnDateAsTimestamp()) {
-            $time = new DateTimeImmutable($this->owner->PublishOnDate);
+            $time = new DateTimeImmutable($owner->PublishOnDate);
 
             $conditions['embargo'] = [
                 'date' => $time->format('Y-m-d H:i T'),
                 'warning' => ($time->getTimestamp() < $now),
-                'name' => _t(self::class . '.EMBARGO_NAME', 'embargo'),
+                'name' => _t(EmbargoExpiryExtension::class . '.EMBARGO_NAME', 'embargo'),
             ];
         }
 
         if ($this->getUnPublishOnDateAsTimestamp()) {
-            $time = new DateTimeImmutable($this->owner->UnPublishOnDate);
+            $time = new DateTimeImmutable($owner->UnPublishOnDate);
 
             $conditions['expiry'] = [
                 'date' => $time->format('Y-m-d H:i T'),
                 'warning' => ($time->getTimestamp() < $now),
-                'name' => _t(self::class . '.EXPIRY_NAME', 'expiry'),
+                'name' => _t(EmbargoExpiryExtension::class . '.EXPIRY_NAME', 'expiry'),
             ];
         }
 
@@ -870,7 +943,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if ($this->isEditable() !== false) {
             return sprintf(
                 _t(
-                    self::class . '.EMBARGO_EDITING_NOTICE',
+                    EmbargoExpiryExtension::class . '.EMBARGO_EDITING_NOTICE',
                     'You are currently editing a record that has an %s date set.'
                 ),
                 implode(' and ', array_column($conditions, 'name'))
@@ -880,7 +953,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if (!$this->checkRemovePermission()) {
             return sprintf(
                 _t(
-                    self::class . '.EMBARGO_NONREMOVABLE_NOTICE',
+                    EmbargoExpiryExtension::class . '.EMBARGO_NONREMOVABLE_NOTICE',
                     'This record has an %s date set, and cannot currently be edited. An administrator will need
                     to remove the scheduled embargo date before you are able to edit this record.'
                 ),
@@ -891,7 +964,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
         if (array_key_exists('embargo', $conditions)) {
             return sprintf(
                 _t(
-                    self::class . '.EMBARGO_NONREMOVABLE_NOTICE',
+                    EmbargoExpiryExtension::class . '.EMBARGO_NONREMOVABLE_NOTICE',
                     'This record has an %s date set, and cannot currently be edited. You will need to remove the
                     scheduled embargo date in order to edit this record.'
                 ),
@@ -901,7 +974,7 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
         return sprintf(
             _t(
-                self::class . '.EMBARGO_SET_NOTICE',
+                EmbargoExpiryExtension::class . '.EMBARGO_SET_NOTICE',
                 'This record has an %s date set.'
             ),
             implode(' and ', array_column($conditions, 'name'))
@@ -910,26 +983,30 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
 
     private function updatePublishOnDate(?string $desiredPublishTime = null): void
     {
+        $owner = $this->getOwner();
+
         if ($desiredPublishTime === null) {
-            $desiredPublishTime = $this->owner->DesiredPublishDate;
+            $desiredPublishTime = $owner->DesiredPublishDate;
         }
 
         // Make sure our PublishOnDate field is set correctly.
-        $this->owner->PublishOnDate = $desiredPublishTime;
+        $owner->PublishOnDate = $desiredPublishTime;
         // Remove the DesiredPublishDate.
-        $this->owner->DesiredPublishDate = null;
+        $owner->DesiredPublishDate = null;
     }
 
     private function updateUnPublishOnDate(?string $desiredUnPublishTime = null): void
     {
+        $owner = $this->getOwner();
+
         if ($desiredUnPublishTime === null) {
-            $desiredUnPublishTime = $this->owner->DesiredUnPublishDate;
+            $desiredUnPublishTime = $owner->DesiredUnPublishDate;
         }
 
         // Make sure our UnPublishOnDate field is set correctly.
-        $this->owner->UnPublishOnDate = $desiredUnPublishTime;
+        $owner->UnPublishOnDate = $desiredUnPublishTime;
         // Remove the DesiredUnPublishDate.
-        $this->owner->DesiredUnPublishDate = null;
+        $owner->DesiredUnPublishDate = null;
     }
 
     /**
@@ -938,8 +1015,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      *
      * The purpose of this method is to allow you a chance to modify your DataObject in any way you may need to prior
      * to it being published. You have access to any $options that you set as part of the PublishTargetJob.
+     * Extension point in @see PublishTargetJob::process()
      */
-    public function prePublishTargetJob(?array $options): void
+    protected function prePublishTargetJob(?array $options): void
     {
         // You do not need to call parent::() when implementing this method, it is simply here to provide code hinting
     }
@@ -950,8 +1028,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
      *
      * The purpose of this method is to allow you a chance to modify your DataObject in any way you may need to prior
      * to it being unpublished. You have access to any $options that you set as part of the PublishTargetJob.
+     * Extension point in @see UnPublishTargetJob::process()
      */
-    public function preUnPublishTargetJob(?array $options): void
+    protected function preUnPublishTargetJob(?array $options): void
     {
         // You do not need to call parent::() when implementing this method, it is simply here to provide code hinting
     }
@@ -959,8 +1038,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * A method that can be implemented on your DataObject. This method is run with invokeWithExtensions prior to
      * creation of the PublishTargetJob.
+     * Extension point in @see EmbargoExpiryExtension::createOrUpdatePublishJob()
      */
-    public function updatePublishTargetJobOptions(?array &$options): void
+    protected function updatePublishTargetJobOptions(?array &$options): void
     {
         // You do not need to call parent::() when implementing this method, it is simply here to provide code hinting
     }
@@ -968,8 +1048,9 @@ class EmbargoExpiryExtension extends DataExtension implements PermissionProvider
     /**
      * A method that can be implemented on your DataObject. This method is run with invokeWithExtensions prior to
      * creation of the PublishTargetJob.
+     * Extension point in @see EmbargoExpiryExtension::createOrUpdateUnPublishJob()
      */
-    public function updateUnPublishTargetJobOptions(?array &$options): void
+    protected function updateUnPublishTargetJobOptions(?array &$options): void
     {
         // You do not need to call parent::() when implementing this method, it is simply here to provide code hinting
     }

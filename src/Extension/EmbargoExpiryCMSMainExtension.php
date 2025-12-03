@@ -6,13 +6,13 @@ use Exception;
 use SilverStripe\CMS\Controllers\CMSMain;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Extension;
+use SilverStripe\Core\Validation\ValidationException;
 use SilverStripe\Forms\Form;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\ValidationException;
 use Symfony\Component\Finder\Exception\AccessDeniedException;
 
 /**
- * @property CMSMain $owner
+ * @extends Extension<CMSMain>
  */
 class EmbargoExpiryCMSMainExtension extends Extension
 {
@@ -22,9 +22,9 @@ class EmbargoExpiryCMSMainExtension extends Extension
     ];
 
     /**
-     * @codeCoverageIgnore
+     * Extension point in @see CMSMain::getEditForm()
      */
-    public function updateEditForm(Form $form): void
+    protected function updateEditForm(Form $form): void
     {
         // Add archive to CMS exemption
         $exempt = $form->getValidationExemptActions();
@@ -43,36 +43,36 @@ class EmbargoExpiryCMSMainExtension extends Extension
      * This action will remove any/all embargo related dates from a record as well as their related queued jobs for
      * publishing and/or unpublishing.
      *
-     * @return mixed
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      * @throws Exception
      */
-    public function removeEmbargoAction(array $data, Form $form)
+    public function removeEmbargoAction(array $data, Form $form): mixed
     {
+        $owner = $this->getOwner();
+
         $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'PublishOnDate');
+        $owner->getResponse()->addHeader('X-Status', 'Successfully removed scheduled embargo date');
 
-        $this->owner->getResponse()->addHeader('X-Status', 'Successfully removed scheduled embargo date');
-
-        return $this->owner->getResponseNegotiator()->respond($this->owner->getRequest());
+        return $owner->getResponseNegotiator()->respond($owner->getRequest());
     }
 
     /**
      * This action will remove any/all embargo related dates from a record as well as their related queued jobs for
      * publishing and/or unpublishing.
      *
-     * @return mixed
      * @throws HTTPResponse_Exception
      * @throws ValidationException
      * @throws Exception
      */
-    public function removeExpiryAction(array $data, Form $form)
+    public function removeExpiryAction(array $data, Form $form): mixed
     {
+        $owner = $this->getOwner();
+
         $this->removeEmbargoOrExpiry($data['ClassName'], $data['ID'], 'UnPublishOnDate');
+        $owner->getResponse()->addHeader('X-Status', 'Successfully removed scheduled expiry date');
 
-        $this->owner->getResponse()->addHeader('X-Status', 'Successfully removed scheduled expiry date');
-
-        return $this->owner->getResponseNegotiator()->respond($this->owner->getRequest());
+        return $owner->getResponseNegotiator()->respond($owner->getRequest());
     }
 
     /**

@@ -10,25 +10,21 @@ use SilverStripe\ORM\FieldType\DBDatetime;
 use Symbiote\QueuedJobs\Services\QueuedJobService;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryExtension;
 use Terraformers\EmbargoExpiry\Extension\EmbargoExpiryFluentExtension;
-use Terraformers\EmbargoExpiry\Tests\Fake\TestQueuedJobService;
+use Terraformers\EmbargoExpiry\Tests\Mock\TestQueuedJobService;
 use TractorCow\Fluent\Extension\FluentSiteTreeExtension;
 use TractorCow\Fluent\Model\Locale;
 use TractorCow\Fluent\State\FluentState;
 
 class EmbargoExpiryFluentExtensionTest extends SapphireTest
 {
-    private const LOCALE_INT = 'en_NZ';
-    private const LOCALE_JP = 'ja_JP';
+    private const string LOCALE_INT = 'en_NZ';
+    private const string LOCALE_JP = 'ja_JP';
 
     /**
      * @var string
      */
-    protected static $fixture_file = 'EmbargoExpiryFluentExtensionTest.yml'; // phpcs:ignore
+    protected static $fixture_file = 'EmbargoExpiryFluentExtensionTest.yml';
 
-    /**
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
-     * @var array
-     */
     protected static $required_extensions = [
         SiteTree::class => [
             EmbargoExpiryExtension::class,
@@ -37,10 +33,6 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
         ],
     ];
 
-    /**
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint
-     * @var array
-     */
     protected static $extra_dataobjects = [
         Locale::class,
     ];
@@ -65,9 +57,6 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
         parent::tearDown();
     }
 
-    /**
-     * @return TestQueuedJobService
-     */
     protected function getService(): TestQueuedJobService
     {
         return singleton(TestQueuedJobService::class);
@@ -89,8 +78,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
 
         $actual = $page->config()->get('field_include');
 
-        // Set canonicalize to true so that the order of the items in each array are standardised.
-        $this->assertEquals($expected, $actual, '', 0.0, 10, true);
+        $this->assertEqualsCanonicalizing($expected, $actual);
     }
 
     public function testPublishScheduled(): void
@@ -98,6 +86,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
         // Fetch the Page ID for this object from the fixture, so that we can use the ID later and fetch more naturally.
         /** @var SiteTree $page */
         $page = $this->objFromFixture(SiteTree::class, 'home');
+
         $pageID = $page->ID;
 
         // Check that an Embargo date is correctly set on the Int localisation.
@@ -154,6 +143,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
         // Fetch the Page ID for this object from the fixture, so that we can use the ID later and fetch more naturally.
         /** @var SiteTree $page */
         $page = $this->objFromFixture(SiteTree::class, 'embargo1');
+
         $pageID = $page->ID;
 
         FluentState::singleton()->withState(function (FluentState $state) use ($pageID): void {
@@ -200,6 +190,7 @@ class EmbargoExpiryFluentExtensionTest extends SapphireTest
         // Fetch the Page ID for this object from the fixture, so that we can use the ID later and fetch more naturally.
         /** @var SiteTree $page */
         $page = $this->objFromFixture(SiteTree::class, 'expiry1');
+
         $pageID = $page->ID;
 
         FluentState::singleton()->withState(function (FluentState $state) use ($pageID): void {

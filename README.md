@@ -29,7 +29,7 @@ Features:
 
 ## Requirements
 
- * SilverStripe 4.0
+ * SilverStripe 6
  * [Queuedjobs](https://github.com/symbiote/silverstripe-queuedjobs)
 
 ## Documentation

@@ -4,10 +4,14 @@ namespace Terraformers\EmbargoExpiry\Extension;
 
 use Exception;
 use Opis\Closure\SerializableClosure;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
+use SilverStripe\ORM\DataObject;
 use TractorCow\Fluent\State\FluentState;
 
-class EmbargoExpiryFluentExtension extends DataExtension
+/**
+ * @extends Extension<DataObject>
+ */
+class EmbargoExpiryFluentExtension extends Extension
 {
     /**
      * Fluent specific configuration
@@ -40,7 +44,7 @@ class EmbargoExpiryFluentExtension extends DataExtension
         // Locale isn't currently used in our Job, but if you subclass, you might find it useful for something.
         $options['locale'] = $locale;
 
-        // Before we fetch our DataObject in the Job, we must have the request Locale set to our FluentState. Otherwise
+        // Before we fetch our DataObject in the Job, we must have the request Locale set to our FluentState. Otherwise,
         // you'll end up pulling the *base* record (EG: from SiteTree instead of SiteTree_Localised), and you'll also
         // publish/un-publish the *base* record.
         $options['onBeforeGetObject'] = new SerializableClosure(static function () use ($locale): void {
@@ -50,16 +54,18 @@ class EmbargoExpiryFluentExtension extends DataExtension
 
     /**
      * @throws Exception
+     * Extension point in @see EmbargoExpiryExtension::createOrUpdatePublishJob()
      */
-    public function updatePublishTargetJobOptions(array &$options): void
+    protected function updatePublishTargetJobOptions(array &$options): void
     {
         $this->setLocaleOptions($options);
     }
 
     /**
      * @throws Exception
+     * Extension point in @see EmbargoExpiryExtension::createOrUpdateUnPublishJob()
      */
-    public function updateUnPublishTargetJobOptions(array &$options): void
+    protected function updateUnPublishTargetJobOptions(array &$options): void
     {
         $this->setLocaleOptions($options);
     }

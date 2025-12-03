@@ -15,13 +15,12 @@ use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
 class PublishTargetJob extends AbstractQueuedJob
 {
 
-    /**
-     * @var DataObject
-     */
-    private $target; // phpcs:ignore SlevomatCodingStandard.TypeHints
+    private ?DataObject $target = null;
 
     public function __construct(?DataObject $obj = null, ?array $options = null)
     {
+        parent::__construct();
+
         $this->totalSteps = 1;
 
         if ($obj !== null) {
@@ -60,7 +59,7 @@ class PublishTargetJob extends AbstractQueuedJob
         $target = $this->getTarget();
 
         return _t(
-            self::class . '.SCHEDULEPUBLISHJOBTITLE',
+            PublishTargetJob::class . '.SCHEDULEPUBLISHJOBTITLE',
             'Scheduled publishing of {object}',
             '',
             [
@@ -94,7 +93,7 @@ class PublishTargetJob extends AbstractQueuedJob
         // Make sure to use local variables for passing by reference as these are job properties
         // which are manipulated via magic methods and these do not work with passing by reference directly
         $options = $this->options;
-        // This allows actions to occur after the publish job has run such as creating snapshots
+        // This allows actions to occur after the Publish job has run such as creating snapshots
         $target->invokeWithExtensions('afterPublishTargetJob', $options);
         $this->options = $options;
 

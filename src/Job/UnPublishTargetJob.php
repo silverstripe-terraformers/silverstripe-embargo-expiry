@@ -15,13 +15,12 @@ use Terraformers\EmbargoExpiry\Job\State\ActionProcessingState;
 class UnPublishTargetJob extends AbstractQueuedJob
 {
 
-    /**
-     * @var DataObject
-     */
-    private $target; // phpcs:ignore SlevomatCodingStandard.TypeHints
+    private ?DataObject $target = null;
 
     public function __construct(?DataObject $obj = null, ?array $options = null)
     {
+        parent::__construct();
+
         $this->totalSteps = 1;
 
         if ($obj !== null) {
@@ -34,9 +33,9 @@ class UnPublishTargetJob extends AbstractQueuedJob
     }
 
     /**
-     * @return DataObject|Versioned|EmbargoExpiryExtension|null $obj
+     * @return DataObject|Versioned|EmbargoExpiryExtension|null
      */
-    public function getTarget()
+    public function getTarget(): ?DataObject
     {
         if ($this->target !== null) {
             return $this->target;
@@ -55,15 +54,12 @@ class UnPublishTargetJob extends AbstractQueuedJob
         return $this->target;
     }
 
-    /**
-     * @return string
-     */
-    public function getTitle() // phpcs:ignore SlevomatCodingStandard.TypeHints
+    public function getTitle(): string
     {
         $target = $this->getTarget();
 
         return _t(
-            self::class . '.SCHEDULEUNPUBLISHJOBTITLE',
+            UnPublishTargetJob::class . '.SCHEDULEUNPUBLISHJOBTITLE',
             'Scheduled un-publishing of {object}',
             '',
             [
@@ -105,7 +101,7 @@ class UnPublishTargetJob extends AbstractQueuedJob
         $this->completeJob();
     }
 
-    protected function completeJob() // phpcs:ignore SlevomatCodingStandard.TypeHints
+    protected function completeJob(): void
     {
         $this->currentStep = 1;
         $this->isComplete = true;

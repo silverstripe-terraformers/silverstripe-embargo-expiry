@@ -1,54 +1,65 @@
 {
-  "name": "silverstripe-terraformers/embargo-expiry",
-  "description": "Simple embargo & expiry for Site Tree",
-  "type": "silverstripe-vendormodule",
-  "keywords": [
-    "silverstripe", "embargo", "expiry", "publish", "unpublish"
-  ],
-  "license": "BSD-3-Clause",
-  "authors": [
-    {
-      "name": "Chris Penny",
-      "email": "chris.penny@gmail.com"
+    "name": "silverstripe-terraformers/embargo-expiry",
+    "description": "Simple embargo & expiry for SiteTree",
+    "type": "silverstripe-vendormodule",
+    "keywords": [
+        "silverstripe",
+        "embargo",
+        "expiry",
+        "publish",
+        "unpublish"
+    ],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Chris Penny",
+            "email": "chris.penny@gmail.com"
+        },
+        {
+            "name": "Silverstripe Terraformers",
+            "email": "terraformers@silverstripe.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/silverstripe-terraformers/embargo-expiry/issues"
     },
-    {
-      "name": "Silverstripe Terraformers",
-      "email": "terraformers@silverstripe.com"
+    "require": {
+        "php": "^8.3",
+        "silverstripe/cms": "^6",
+        "symbiote/silverstripe-queuedjobs": "^6",
+        "opis/closure": "^3.6"
+    },
+    "require-dev": {
+        "silverstripe/recipe-testing": "^4",
+        "tractorcow/silverstripe-fluent": "^8",
+        "silverstripe/frameworktest": "^2",
+        "silverstripe/standards": "^1",
+        "phpstan/extension-installer": "^1.3"
+    },
+    "extra": {
+        "expose": [
+            "client/dist"
+        ],
+        "branch-alias": {
+            "dev-master": "3.x-dev",
+            "dev-2": "2.x-dev",
+            "dev-1": "1.x-dev"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Terraformers\\EmbargoExpiry\\": "src/",
+            "Terraformers\\EmbargoExpiry\\Tests\\": "tests/"
+        }
+    },
+    "prefer-stable": true,
+    "minimum-stability": "dev",
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "silverstripe/vendor-plugin": true,
+            "silverstripe/recipe-plugin": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     }
-  ],
-  "support": {
-    "issues": "https://github.com/silverstripe-terraformers/embargo-expiry/issues"
-  },
-  "require": {
-    "php": "^8",
-    "silverstripe/cms": "^5",
-    "symbiote/silverstripe-queuedjobs": "^5",
-    "opis/closure": "^3.6"
-  },
-  "require-dev": {
-    "silverstripe/recipe-testing": "^3",
-    "tractorcow/silverstripe-fluent": "^7",
-    "slevomat/coding-standard": "~8.0.0"
-  },
-  "extra": {
-    "expose": [
-      "client/dist"
-    ]
-  },
-  "autoload": {
-    "psr-4": {
-      "Terraformers\\EmbargoExpiry\\": "src/",
-      "Terraformers\\EmbargoExpiry\\Tests\\": "tests/"
-    }
-  },
-  "prefer-stable": true,
-  "minimum-stability": "dev",
-  "config": {
-    "allow-plugins": {
-      "composer/installers": true,
-      "silverstripe/vendor-plugin": true,
-      "silverstripe/recipe-plugin": true,
-      "dealerdirect/phpcodesniffer-composer-installer": true
-    }
-  }
 }
