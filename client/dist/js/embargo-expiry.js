@@ -1,1 +1,63 @@
-(()=>{"use strict";window.jQuery.entwine("ss",(function(n){var t=null,e=null,i=null,u=null,l=function(){t=n('button[name="action_publish"]'),e=n('button[name="action_save"]'),i=n('button[name="action_doPublish"]'),u=n('button[name="action_doSave"]')},o=function(n){if(n)return null!==t&&t.detach(),void(null!==i&&i.detach());null!==t&&t.insertAfter(e),null!==i&&i.insertAfter(u)};n('input[name="DesiredPublishDate"]').entwine({onchange:function(){l(),o(n(this).val().length>0)}}),n("#Form_EditForm_PublishOnDate").entwine({onmatch:function(){l(),o(n(this).html().length>0)}})}))})();
+/* eslint-env browser */
+
+window.jQuery.entwine('ss', ($) => {
+  let siteTreePublishButton = null;
+  let siteTreeSaveButton = null;
+  let versionedObjectPublishButton = null;
+  let versionedObjectSaveButton = null;
+
+  const updateButtonReferences = () => {
+    siteTreePublishButton = $('button[name="action_publish"]');
+    siteTreeSaveButton = $('button[name="action_save"]');
+    versionedObjectPublishButton = $('button[name="action_doPublish"]');
+    versionedObjectSaveButton = $('button[name="action_doSave"]');
+  };
+
+  const hidePublishButton = () => {
+    if (siteTreePublishButton !== null) {
+      siteTreePublishButton.detach();
+    }
+
+    if (versionedObjectPublishButton !== null) {
+      versionedObjectPublishButton.detach();
+    }
+  };
+
+  const showPublishButton = () => {
+    if (siteTreePublishButton !== null) {
+      siteTreePublishButton.insertAfter(siteTreeSaveButton);
+    }
+
+    if (versionedObjectPublishButton !== null) {
+      versionedObjectPublishButton.insertAfter(versionedObjectSaveButton);
+    }
+  };
+
+  const showHidePublishButtons = (hasEmbargo) => {
+    if (hasEmbargo) {
+      hidePublishButton();
+
+      return;
+    }
+
+    showPublishButton();
+  };
+
+  $('input[name="DesiredPublishDate"]').entwine({
+    onchange() {
+      // Any time we match this field, make sure we have the latest instance of our buttons.
+      updateButtonReferences();
+
+      showHidePublishButtons($(this).val().length > 0);
+    },
+  });
+
+  $('#Form_EditForm_PublishOnDate').entwine({
+    onmatch() {
+      // Any time we match this field, make sure we have the latest instance of our buttons.
+      updateButtonReferences();
+
+      showHidePublishButtons($(this).html().length > 0);
+    },
+  });
+});
