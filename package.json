@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Embargo & expiry module for SilverStrip CMS",
   "engines": {
-    "node": "^18"
+    "node": "^24"
   },
   "scripts": {
     "lint": "eslint client/dist"
