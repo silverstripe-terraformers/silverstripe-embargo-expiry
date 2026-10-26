@@ -59,6 +59,13 @@ class EmbargoExpiryExtension extends Extension implements PermissionProvider
         'UnPublishJob' => QueuedJobDescriptor::class,
     ];
 
+    private static array $scaffold_cms_fields_settings = [
+        'ignoreFields' => [
+            'PublishOnDate',
+            'UnPublishOnDate',
+        ],
+    ];
+
     /**
      * Property used to track when a DataObject is being accessed during a PublishTargetJob.
      *
