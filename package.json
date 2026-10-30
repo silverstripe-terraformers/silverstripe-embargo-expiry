@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "Embargo & expiry module for SilverStrip CMS",
   "engines": {
-    "node": "^18"
+    "node": "^24"
   },
   "scripts": {
     "lint": "eslint client/dist"
   },
+  "packageManager": "yarn@4.18.0+sha512.fcb8716fe7cd0eece141ffc18b92193a9df9204c1ba83189c288835223fc0bbe64af473bab0d5e9927a7daeb5caf2bb07eb2787cc9338ca040ea125f2a1f2f7e",
   "repository": {
     "type": "git",
     "url": "git@github.com:silverstripe-terraformers/silverstripe-embargo-expiry.git"
@@ -27,6 +28,7 @@
   },
   "homepage": "https://github.com/silverstripe-terraformers/silverstripe-embargo-expiry",
   "devDependencies": {
-    "@silverstripe/eslint-config": "^1.6.0"
+    "@silverstripe/eslint-config": "^2",
+    "eslint": "^8.26.0"
   }
 }
